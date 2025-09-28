@@ -2,17 +2,9 @@
 
 Everything you need to build a Svelte project, powered by [`sv`](https://github.com/sveltejs/cli).
 
-## Creating a project
-
-If you're seeing this, you've probably already done this step. Congrats!
-
-```sh
-# create a new project in the current directory
-npx sv create
-
-# create a new project in my-app
-npx sv create my-app
-```
+For project guidelines, see the `docs/` folder, containing:
+- `docs/architecture.md`: Best practices for implementing features, how to read/write data, and handling client state.
+- `docs/gotchas.md`: Common mistakes to avoid, along with tips and tricks.
 
 ## Developing
 

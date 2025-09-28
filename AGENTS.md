@@ -1,5 +1,7 @@
 # Repository Guidelines
 
+For up to date information, see the README.md. You may traverse and read the mentioned files as needed. You may search the web to understand current, modern-day best practices.
+
 ## Project Structure & Module Organization
 - `src/routes` drives SvelteKit routing; pair `+page.svelte`, `+page.server.ts`, and optional `+layout` files per feature (e.g., `chat`, `dashboard`).
 - Shared logic lives under `src/lib` (`logger.ts`, `constants.ts`, reusable assets) and `src/hooks.server.ts` wires Supabase auth across requests.
