@@ -5,15 +5,24 @@ import { isString } from '$lib/util';
 
 type SvelteFetch = Parameters<PageServerLoad>[0]['fetch'];
 
-export const load: PageServerLoad = async ({ fetch, locals: { safeGetSession } }) => {
-	const { session } = await safeGetSession();
-	if (!session) {
+export const load: PageServerLoad = async ({ fetch, locals: { safeGetSession, supabase } }) => {
+	const { session, user } = await safeGetSession();
+	if (!session || !user) {
 		redirect(303, '/login');
 	}
 
-	const ephemeralKey = generateEphemeralKey(fetch);
+	const getProfileLangStmt = supabase.from('profiles').select('lang').eq('id', user.id).single();
+	const [ephemeralKey, { data: profile }] = await Promise.all([
+		generateEphemeralKey(fetch),
+		getProfileLangStmt
+	]);
 
-	return { ephemeralKey };
+	let language = 'ja';
+	if (profile) {
+		language = profile.lang;
+	}
+
+	return { ephemeralKey, language };
 };
 
 async function generateEphemeralKey(fetch: SvelteFetch): Promise<string | undefined> {

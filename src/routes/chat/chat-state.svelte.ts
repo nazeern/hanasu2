@@ -31,7 +31,7 @@ function toChatMessage(oaiMessage: RealtimeMessageItem): ChatMessage {
 interface ChatInterface {
 	connected: boolean;
 	messages: ChatMessage[];
-	connect(promisedEphemeralKey: Promise<string | undefined>): Promise<boolean>;
+	connect(ephemeralKey?: string): Promise<boolean>;
 }
 
 export class Chat implements ChatInterface {
@@ -40,7 +40,7 @@ export class Chat implements ChatInterface {
 	connected = $state<boolean>(false);
 	messages = $state<ChatMessage[]>([]);
 
-	constructor() {
+	constructor(language: string) {
 		this.connected = false;
 		const agent = new RealtimeAgent({
 			name: 'Assistant',
@@ -52,7 +52,8 @@ export class Chat implements ChatInterface {
 				audio: {
 					input: {
 						transcription: {
-							model: 'gpt-4o-transcribe'
+							model: 'gpt-4o-transcribe',
+							language: language,
 						}
 					}
 				}
@@ -78,8 +79,7 @@ export class Chat implements ChatInterface {
 		});
 	}
 
-	async connect(promisedEphemeralKey: Promise<string | undefined>): Promise<boolean> {
-		const ephemeralKey = await promisedEphemeralKey;
+	async connect(ephemeralKey?: string): Promise<boolean> {
 		if (!ephemeralKey) {
 			return false;
 		}

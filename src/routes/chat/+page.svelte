@@ -4,7 +4,7 @@
 
 	let { data } = $props()
 
-	const chat = new Chat()
+	const chat = new Chat(data.language)
 	onMount(() => chat.connect(data.ephemeralKey))
 </script>
 
