@@ -1,32 +1,12 @@
 import logger from '$lib/logger';
-import { RealtimeAgent, RealtimeSession, type RealtimeMessageItem } from '@openai/agents-realtime';
+import { RealtimeAgent, RealtimeSession } from '@openai/agents-realtime';
+import { toChatMessage } from './utils';
 
-type ChatMessage = {
+export type ChatMessage = {
 	text: string;
 	from: string;
 	id: string;
 };
-
-function toChatMessage(oaiMessage: RealtimeMessageItem): ChatMessage {
-	const text = oaiMessage.content
-		.map((segment) => {
-			switch (segment.type) {
-				case 'input_audio':
-				case 'output_audio':
-					return segment.transcript ?? '';
-				default:
-					return '';
-			}
-		})
-		.filter(Boolean)
-		.join(' ');
-
-	return {
-		text,
-		from: oaiMessage.role,
-		id: oaiMessage.itemId
-	};
-}
 
 interface ChatInterface {
 	connected: boolean;
@@ -63,20 +43,19 @@ export class Chat implements ChatInterface {
 		this.session = session;
 
 		this.messages = [];
-		// Write chat messages as AI speaks
 		this.session.on('history_updated', (items) => {
-			const item = items.at(-1);
-			if (item?.type !== 'message') {
-				return;
-			}
-			const thisMessage = toChatMessage(item);
-			const lastMessage = this.messages.at(-1);
-			if (thisMessage.id === lastMessage?.id) {
-				const n = this.messages.length;
-				this.messages[n - 1] = thisMessage;
-			} else {
-				this.messages.push(thisMessage);
-			}
+			items
+				.slice(-5)
+				.filter((item) => item.type === 'message')
+				.forEach((item) => {
+					const incomingMessage = toChatMessage(item);
+					let existingIdx = this.messages.findLastIndex((msg) => msg.id === incomingMessage.id);
+					if (existingIdx >= 0) {
+						this.messages[existingIdx] = incomingMessage
+					} else {
+						this.messages.push(incomingMessage);
+					}
+				});
 		});
 	}
 
