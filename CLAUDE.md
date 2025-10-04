@@ -22,7 +22,7 @@ For up to date information, see the README.md. You may traverse and read the men
 - Log through `$lib/logger` so output remains structured via `pino`.
 
 ## Testing Guidelines
-- Type safety and Svelte compile checks run via `npm run check`; wire new data types into `src/database.types.ts` to maintain coverage of Supabase queries.
+- Type safety and Svelte compile checks run via `npm run check`; wire new data types into `src/database.types.ts` to maintain coverage of Supabase queries. You should run type checks at the end of implementation to maintain code quality.
 - When adding forms or auth flows, add manual test notes in the PR and exercise `/auth/confirm` to verify enrollment cycles.
 - Keep any future Vitest suites under `src/lib/__tests__` and mirror route structure for clarity.
 
