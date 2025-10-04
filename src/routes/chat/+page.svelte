@@ -17,5 +17,15 @@
 <p>CHAT PAGE</p>
 <p>success {chat.connected}</p>
 {#each chat.messages as msg (msg.id)}
-	<p>{msg.from}: {msg.text}</p>
+	<div>
+		<button type="button" onclick={() => chat.translate(msg)}>
+			{msg.from}: {msg.text}
+		</button>
+		{#if msg.translationLoading}
+			<p>Translating...</p>
+		{/if}
+		{#if msg.translatedText}
+			<p>{msg.translatedText}</p>
+		{/if}
+	</div>
 {/each}

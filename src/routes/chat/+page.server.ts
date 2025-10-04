@@ -1,9 +1,10 @@
-import { redirect } from '@sveltejs/kit';
-import type { PageServerLoad } from './$types';
-import { OPENAI_SECRET_KEY } from '$env/static/private';
+import { redirect, fail } from '@sveltejs/kit';
+import type { Actions, PageServerLoad } from './$types';
+import { GOOGLE_TRANSLATE_API_KEY } from '$env/static/private';
 import { isString } from '$lib/util';
+import { generateEphemeralKey } from './utils';
 
-type SvelteFetch = Parameters<PageServerLoad>[0]['fetch'];
+export type SvelteFetch = Parameters<PageServerLoad>[0]['fetch'];
 
 export const load: PageServerLoad = async ({ fetch, locals: { safeGetSession, supabase } }) => {
 	const { session, user } = await safeGetSession();
@@ -25,33 +26,51 @@ export const load: PageServerLoad = async ({ fetch, locals: { safeGetSession, su
 	return { ephemeralKey, language };
 };
 
-async function generateEphemeralKey(fetch: SvelteFetch): Promise<string | undefined> {
-	const sessionConfig: string = JSON.stringify({
-		session: {
-			type: 'realtime',
-			model: 'gpt-realtime',
-			audio: {
-				output: {
-					voice: 'marin'
-				}
-			}
+
+export const actions: Actions = {
+	translate: async ({ request, fetch }) => {
+		const formData = await request.formData();
+		const text = formData.get('text');
+
+		if (!isString(text)) {
+			return fail(400, { error: 'Invalid request' });
 		}
-	});
 
-	const response = await fetch('https://api.openai.com/v1/realtime/client_secrets', {
-		method: 'POST',
-		headers: {
-			Authorization: `Bearer ${OPENAI_SECRET_KEY}`,
-			'Content-Type': 'application/json'
-		},
-		body: sessionConfig
-	});
+		if (!text.trim()) {
+			return fail(400, { error: 'Text cannot be empty' });
+		}
 
-	const data = await response.json();
-	const ephemeralKey = data.value;
-	if (isString(ephemeralKey)) {
-		return ephemeralKey;
+		try {
+			const url = new URL('https://translation.googleapis.com/language/translate/v2');
+			url.searchParams.append('key', GOOGLE_TRANSLATE_API_KEY);
+
+			const response = await fetch(url.toString(), {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({
+					q: text,
+					target: 'en',
+					format: 'text'
+				})
+			});
+
+			if (!response.ok) {
+				return fail(500, { error: 'Translation API request failed' });
+			}
+
+			const res = await response.json();
+			const translatedText = res.data?.translations?.[0]?.translatedText;
+
+			if (!isString(translatedText)) {
+				return fail(500, { error: 'Invalid translation response' });
+			}
+
+			return { translatedText };
+		} catch (error) {
+			console.error('Translation error:', error);
+			return fail(500, { error: 'Translation failed' });
+		}
 	}
-
-	return undefined;
-}
+};

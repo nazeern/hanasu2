@@ -6,6 +6,8 @@ export type ChatMessage = {
 	text: string;
 	from: string;
 	id: string;
+	translatedText?: string;
+	translationLoading: boolean;
 };
 
 interface ChatInterface {
@@ -13,6 +15,7 @@ interface ChatInterface {
 	messages: ChatMessage[];
 	connect(ephemeralKey?: string): Promise<boolean>;
 	close(): void;
+	translate(message: ChatMessage): Promise<void>;
 }
 
 export class Chat implements ChatInterface {
@@ -51,7 +54,7 @@ export class Chat implements ChatInterface {
 					const incomingMessage = toChatMessage(item);
 					let existingIdx = this.messages.findLastIndex((msg) => msg.id === incomingMessage.id);
 					if (existingIdx >= 0) {
-						this.messages[existingIdx] = incomingMessage
+						this.messages[existingIdx] = incomingMessage;
 					} else {
 						this.messages.push(incomingMessage);
 					}
@@ -84,5 +87,32 @@ export class Chat implements ChatInterface {
 			return;
 		}
 		this.session.close();
+	}
+
+	async translate(message: ChatMessage): Promise<void> {
+		if (message.translatedText) {
+			return;
+		}
+
+		message.translationLoading = true;
+		try {
+			const formData = new FormData();
+			formData.append('text', message.text);
+
+			const response = await fetch('/chat?/translate', {
+				method: 'POST',
+				body: formData
+			});
+
+			const result = await response.json();
+
+			if (result.type === 'success' && result.data?.translatedText) {
+				message.translatedText = result.data.translatedText;
+			}
+		} catch (error) {
+			logger.error('Translation failed');
+		} finally {
+			message.translationLoading = false;
+		}
 	}
 }
