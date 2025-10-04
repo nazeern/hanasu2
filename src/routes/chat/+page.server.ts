@@ -72,5 +72,50 @@ export const actions: Actions = {
 			console.error('Translation error:', error);
 			return fail(500, { error: 'Translation failed' });
 		}
+	},
+
+	lookupWord: async ({ request }) => {
+		const formData = await request.formData();
+		const sentence = formData.get('sentence');
+		const tapIndexStr = formData.get('tapIndex');
+
+		if (!isString(sentence) || !isString(tapIndexStr)) {
+			return fail(400, { error: 'Invalid request' });
+		}
+
+		const tapIndex = parseInt(tapIndexStr, 10);
+		if (isNaN(tapIndex)) {
+			return fail(400, { error: 'Invalid tap index' });
+		}
+
+		try {
+			const kuromoji = await import('kuromoji');
+
+			return new Promise((resolve) => {
+				kuromoji.builder({ dicPath: 'node_modules/kuromoji/dict' }).build((err, tokenizer) => {
+					if (err || !tokenizer) {
+						resolve(fail(500, { error: 'Tokenizer initialization failed' }));
+						return;
+					}
+
+					const tokens = tokenizer.tokenize(sentence);
+					let currentIndex = 0;
+
+					for (const token of tokens) {
+						const tokenLength = token.surface_form.length;
+						if (tapIndex >= currentIndex && tapIndex < currentIndex + tokenLength) {
+							resolve({ word: token.surface_form });
+							return;
+						}
+						currentIndex += tokenLength;
+					}
+
+					resolve(fail(404, { error: 'No word found at tap position' }));
+				});
+			});
+		} catch (error) {
+			console.error('Word lookup error:', error);
+			return fail(500, { error: 'Word lookup failed' });
+		}
 	}
 };

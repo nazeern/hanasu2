@@ -22,7 +22,8 @@ export function toChatMessage(oaiMessage: RealtimeMessageItem): ChatMessage {
 		text,
 		from: oaiMessage.role,
 		id: oaiMessage.itemId,
-		translationLoading: false
+		translationLoading: false,
+		lookupLoading: false
 	};
 }
 

@@ -8,6 +8,8 @@ export type ChatMessage = {
 	id: string;
 	translatedText?: string;
 	translationLoading: boolean;
+	lookupWord?: string;
+	lookupLoading: boolean;
 };
 
 interface ChatInterface {
@@ -16,6 +18,7 @@ interface ChatInterface {
 	connect(ephemeralKey?: string): Promise<boolean>;
 	close(): void;
 	translate(message: ChatMessage): Promise<void>;
+	lookupWord(message: ChatMessage, tapIndex: number): Promise<void>;
 }
 
 export class Chat implements ChatInterface {
@@ -113,6 +116,30 @@ export class Chat implements ChatInterface {
 			logger.error('Translation failed');
 		} finally {
 			message.translationLoading = false;
+		}
+	}
+
+	async lookupWord(message: ChatMessage, tapIndex: number): Promise<void> {
+		message.lookupLoading = true;
+		try {
+			const formData = new FormData();
+			formData.append('sentence', message.text);
+			formData.append('tapIndex', tapIndex.toString());
+
+			const response = await fetch('/chat?/lookupWord', {
+				method: 'POST',
+				body: formData
+			});
+
+			const result = await response.json();
+
+			if (result.type === 'success' && result.data?.word) {
+				message.lookupWord = result.data.word;
+			}
+		} catch (error) {
+			logger.error('Word lookup failed');
+		} finally {
+			message.lookupLoading = false;
 		}
 	}
 }

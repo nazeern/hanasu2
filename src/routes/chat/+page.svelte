@@ -18,14 +18,34 @@
 <p>success {chat.connected}</p>
 {#each chat.messages as msg (msg.id)}
 	<div>
+		<p>{msg.from}:</p>
+		<button
+			onclick={(e) => {
+				const target = e.target as HTMLElement;
+				const range = document.caretRangeFromPoint(e.clientX, e.clientY);
+				if (range) {
+					const textNode = range.startContainer;
+					const offset = range.startOffset;
+					chat.lookupWord(msg, offset);
+				}
+			}}
+		>
+			{msg.text}
+		</button>
 		<button type="button" onclick={() => chat.translate(msg)}>
-			{msg.from}: {msg.text}
+			Translate
 		</button>
 		{#if msg.translationLoading}
 			<p>Translating...</p>
 		{/if}
 		{#if msg.translatedText}
 			<p>{msg.translatedText}</p>
+		{/if}
+		{#if msg.lookupLoading}
+			<p>Looking up word...</p>
+		{/if}
+		{#if msg.lookupWord}
+			<p>Word: {msg.lookupWord}</p>
 		{/if}
 	</div>
 {/each}
