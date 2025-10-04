@@ -5,7 +5,13 @@
 	let { data } = $props()
 
 	const chat = new Chat(data.language)
-	onMount(() => chat.connect(data.ephemeralKey))
+	onMount(() => {
+		chat.connect(data.ephemeralKey);
+
+		return () => {
+			chat.close();
+		};
+	})
 </script>
 
 <p>CHAT PAGE</p>

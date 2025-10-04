@@ -32,6 +32,7 @@ interface ChatInterface {
 	connected: boolean;
 	messages: ChatMessage[];
 	connect(ephemeralKey?: string): Promise<boolean>;
+	close(): void;
 }
 
 export class Chat implements ChatInterface {
@@ -53,7 +54,7 @@ export class Chat implements ChatInterface {
 					input: {
 						transcription: {
 							model: 'gpt-4o-transcribe',
-							language: language,
+							language: language
 						}
 					}
 				}
@@ -83,6 +84,10 @@ export class Chat implements ChatInterface {
 		if (!ephemeralKey) {
 			return false;
 		}
+		if (this.connected) {
+			logger.warn('Chat session already connected, ignoring duplicate connect call');
+			return true;
+		}
 		try {
 			await this.session.connect({
 				apiKey: ephemeralKey
@@ -93,5 +98,12 @@ export class Chat implements ChatInterface {
 			logger.error('Failed to connect to OpenAI Realtime session');
 			return false;
 		}
+	}
+
+	close(): void {
+		if (!this.connected) {
+			return;
+		}
+		this.session.close();
 	}
 }
