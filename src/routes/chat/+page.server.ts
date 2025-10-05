@@ -1,12 +1,18 @@
 import { redirect, fail } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
-import { GOOGLE_TRANSLATE_API_KEY } from '$env/static/private';
+import { GOOGLE_TRANSLATE_API_KEY, OPENAI_SECRET_KEY } from '$env/static/private';
 import { isString } from '$lib/util';
-import { generateEphemeralKey } from './utils';
+import { dev } from '$app/environment';
 
 export type SvelteFetch = Parameters<PageServerLoad>[0]['fetch'];
 
-export const load: PageServerLoad = async ({ fetch, locals: { safeGetSession, supabase } }) => {
+export const load: PageServerLoad = async ({
+	fetch,
+	url,
+	locals: { safeGetSession, supabase }
+}) => {
+	const testMode = dev && url.searchParams.get('test') === 'true';
+
 	const { session, user } = await safeGetSession();
 	if (!session || !user) {
 		redirect(303, '/login');
@@ -18,14 +24,12 @@ export const load: PageServerLoad = async ({ fetch, locals: { safeGetSession, su
 		getProfileLangStmt
 	]);
 
-	let language = 'ja';
-	if (profile) {
-		language = profile.lang;
-	}
-
-	return { ephemeralKey, language };
+	return {
+		ephemeralKey: testMode ? undefined : ephemeralKey,
+		language: profile?.lang ?? 'ja',
+		testMode: testMode
+	};
 };
-
 
 export const actions: Actions = {
 	translate: async ({ request, fetch }) => {
@@ -119,3 +123,34 @@ export const actions: Actions = {
 		}
 	}
 };
+
+async function generateEphemeralKey(fetch: SvelteFetch): Promise<string | undefined> {
+	const sessionConfig: string = JSON.stringify({
+		session: {
+			type: 'realtime',
+			model: 'gpt-realtime',
+			audio: {
+				output: {
+					voice: 'marin'
+				}
+			}
+		}
+	});
+
+	const response = await fetch('https://api.openai.com/v1/realtime/client_secrets', {
+		method: 'POST',
+		headers: {
+			Authorization: `Bearer ${OPENAI_SECRET_KEY}`,
+			'Content-Type': 'application/json'
+		},
+		body: sessionConfig
+	});
+
+	const data = await response.json();
+	const ephemeralKey = data.value;
+	if (isString(ephemeralKey)) {
+		return ephemeralKey;
+	}
+
+	return undefined;
+}

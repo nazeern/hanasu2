@@ -4,7 +4,7 @@ import { toChatMessage } from './utils';
 
 export type ChatMessage = {
 	text: string;
-	from: string;
+	from: 'user' | 'agent';
 	id: string;
 	translatedText?: string;
 	translationLoading: boolean;
@@ -27,7 +27,7 @@ export class Chat implements ChatInterface {
 	connected = $state<boolean>(false);
 	messages = $state<ChatMessage[]>([]);
 
-	constructor(language: string) {
+	constructor(language: string, testMode: boolean) {
 		this.connected = false;
 		const agent = new RealtimeAgent({
 			name: 'Assistant',
@@ -49,6 +49,17 @@ export class Chat implements ChatInterface {
 		this.session = session;
 
 		this.messages = [];
+		if (testMode) {
+			// Sample message if chat is disabled
+			this.messages.push({
+				text: 'こんにちは',
+				from: 'agent',
+				id: 'test-message-1',
+				translationLoading: false,
+				lookupLoading: false
+			});
+		}
+
 		this.session.on('history_updated', (items) => {
 			items
 				.slice(-5)

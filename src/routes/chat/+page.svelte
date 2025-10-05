@@ -4,7 +4,7 @@
 
 	let { data } = $props()
 
-	const chat = new Chat(data.language)
+	const chat = new Chat(data.language, data.testMode)
 	onMount(() => {
 		chat.connect(data.ephemeralKey);
 
@@ -21,10 +21,8 @@
 		<p>{msg.from}:</p>
 		<button
 			onclick={(e) => {
-				const target = e.target as HTMLElement;
 				const range = document.caretRangeFromPoint(e.clientX, e.clientY);
 				if (range) {
-					const textNode = range.startContainer;
 					const offset = range.startOffset;
 					chat.lookupWord(msg, offset);
 				}
