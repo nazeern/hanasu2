@@ -110,18 +110,24 @@ export class Chat implements ChatInterface {
 
 		message.translationLoading = true;
 		try {
-			const formData = new FormData();
-			formData.append('text', message.text);
-
-			const response = await fetch('/chat?/translate', {
+			const response = await fetch('/chat/translate', {
 				method: 'POST',
-				body: formData
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({
+					text: message.text
+				})
 			});
 
-			const result = await response.json();
+			if (!response.ok) {
+				logger.error('Translation API request failed');
+				return;
+			}
 
-			if (result.type === 'success' && result.data?.translatedText) {
-				message.translatedText = result.data.translatedText;
+			const result = await response.json();
+			if (result.translatedText) {
+				message.translatedText = result.translatedText;
 			}
 		} catch (error) {
 			logger.error('Translation failed');
