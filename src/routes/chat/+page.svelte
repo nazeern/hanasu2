@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { Chat } from './chat-state.svelte';
+	import type { ChatMessage } from './chat-state.svelte';
+	import { createClickHandler } from '$lib/click-handler';
 
 	let { data } = $props()
 
@@ -12,6 +14,19 @@
 			chat.close();
 		};
 	})
+
+	// Create click handlers for word lookup (single) and translation (double)
+	const { handleSingleClick, handleDoubleClick } = createClickHandler<ChatMessage>(
+		(e, msg) => {
+			const range = document.caretRangeFromPoint(e.clientX, e.clientY);
+			if (range) {
+				chat.lookupWord(msg, range.startOffset);
+			}
+		},
+		(msg) => {
+			chat.translate(msg);
+		}
+	);
 </script>
 
 <p>CHAT PAGE</p>
@@ -20,18 +35,10 @@
 	<div>
 		<p>{msg.from}:</p>
 		<button
-			onclick={(e) => {
-				const range = document.caretRangeFromPoint(e.clientX, e.clientY);
-				if (range) {
-					const offset = range.startOffset;
-					chat.lookupWord(msg, offset);
-				}
-			}}
+			onclick={(e) => handleSingleClick(e, msg)}
+			ondblclick={() => handleDoubleClick(msg)}
 		>
 			{msg.text}
-		</button>
-		<button type="button" onclick={() => chat.translate(msg)}>
-			Translate
 		</button>
 		{#if msg.translationLoading}
 			<p>Translating...</p>
