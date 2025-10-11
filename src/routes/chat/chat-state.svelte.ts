@@ -2,10 +2,11 @@ import logger from '$lib/logger';
 import { RealtimeAgent, RealtimeSession } from '@openai/agents-realtime';
 import { toChatMessage } from './utils';
 
-export type LookupResult = {
-	word: string;
-	baseForm: string;
-	partOfSpeech: string;
+export type LookupInfo = {
+	loading: boolean;
+	word?: string;
+	baseForm?: string;
+	partOfSpeech?: string;
 	reading?: string;
 	pronunciation?: string;
 };
@@ -16,13 +17,12 @@ export type ChatMessage = {
 	id: string;
 	translatedText?: string;
 	translationLoading: boolean;
-	lookupResult?: LookupResult;
-	lookupLoading: boolean;
 };
 
 interface ChatInterface {
 	connected: boolean;
 	messages: ChatMessage[];
+	lookupInfo: LookupInfo | null;
 	connect(ephemeralKey?: string): Promise<boolean>;
 	close(): void;
 	translate(message: ChatMessage): Promise<void>;
@@ -34,6 +34,7 @@ export class Chat implements ChatInterface {
 
 	connected = $state<boolean>(false);
 	messages = $state<ChatMessage[]>([]);
+	lookupInfo = $state<LookupInfo | null>(null);
 
 	constructor(language: string, testMode: boolean) {
 		this.connected = false;
@@ -63,8 +64,7 @@ export class Chat implements ChatInterface {
 				text: 'こんにちは',
 				from: 'agent',
 				id: 'test-message-1',
-				translationLoading: false,
-				lookupLoading: false
+				translationLoading: false
 			});
 		}
 
@@ -145,7 +145,10 @@ export class Chat implements ChatInterface {
 	}
 
 	async lookupWord(message: ChatMessage, tapIndex: number): Promise<void> {
-		message.lookupLoading = true;
+		this.lookupInfo = {
+			loading: true
+		};
+
 		try {
 			const response = await fetch('/chat/lookup', {
 				method: 'POST',
@@ -159,27 +162,22 @@ export class Chat implements ChatInterface {
 			});
 
 			if (!response.ok) {
-				logger.error('Word lookup API request failed');
-				return;
+				throw new Error('Word lookup API request failed');
 			}
 
 			const result = await response.json();
 
-			if (result.word) {
-				const lookupResult: LookupResult = {
-					word: result.word,
-					baseForm: result.baseForm,
-					partOfSpeech: result.partOfSpeech,
-					reading: result.reading,
-					pronunciation: result.pronunciation
-				};
-
-				message.lookupResult = lookupResult;
-			}
+			this.lookupInfo = {
+				word: result.word,
+				baseForm: result.baseForm,
+				partOfSpeech: result.partOfSpeech,
+				reading: result.reading,
+				pronunciation: result.pronunciation,
+				loading: false
+			};
 		} catch (error) {
 			logger.error('Word lookup failed', error);
-		} finally {
-			message.lookupLoading = false;
+			this.lookupInfo = null;
 		}
 	}
 }

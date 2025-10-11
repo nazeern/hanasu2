@@ -61,21 +61,23 @@
 		{#if msg.translatedText}
 			<p>{msg.translatedText}</p>
 		{/if}
-		{#if msg.lookupLoading}
-			<p>Looking up word...</p>
-		{/if}
-		{#if msg.lookupResult}
-			<div>
-				<p><strong>Word:</strong> {msg.lookupResult.word}</p>
-				<p><strong>Base Form:</strong> {msg.lookupResult.baseForm}</p>
-				<p><strong>Part of Speech:</strong> {msg.lookupResult.partOfSpeech}</p>
-				{#if msg.lookupResult.reading}
-					<p><strong>Reading:</strong> {msg.lookupResult.reading}</p>
-				{/if}
-				{#if msg.lookupResult.pronunciation}
-					<p><strong>Pronunciation:</strong> {msg.lookupResult.pronunciation}</p>
-				{/if}
-			</div>
-		{/if}
 	</div>
 {/each}
+
+{#if chat.lookupInfo}
+	{#if chat.lookupInfo.loading}
+		<p>Looking up word...</p>
+	{:else if chat.lookupInfo.word}
+		<div>
+			<p><strong>Word:</strong> {chat.lookupInfo.word}</p>
+			<p><strong>Base Form:</strong> {chat.lookupInfo.baseForm}</p>
+			<p><strong>Part of Speech:</strong> {chat.lookupInfo.partOfSpeech}</p>
+			{#if chat.lookupInfo.reading}
+				<p><strong>Reading:</strong> {chat.lookupInfo.reading}</p>
+			{/if}
+			{#if chat.lookupInfo.pronunciation}
+				<p><strong>Pronunciation:</strong> {chat.lookupInfo.pronunciation}</p>
+			{/if}
+		</div>
+	{/if}
+{/if}

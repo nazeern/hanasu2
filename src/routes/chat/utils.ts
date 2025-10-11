@@ -19,7 +19,6 @@ export function toChatMessage(oaiMessage: RealtimeMessageItem): ChatMessage {
 		text,
 		from: oaiMessage.role == 'assistant' ? 'agent' : 'user',
 		id: oaiMessage.itemId,
-		translationLoading: false,
-		lookupLoading: false
+		translationLoading: false
 	};
 }
