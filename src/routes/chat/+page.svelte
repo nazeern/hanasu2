@@ -64,19 +64,19 @@
 	</div>
 {/each}
 
-{#if chat.lookupInfo}
-	{#if chat.lookupInfo.loading}
+{#if chat.wordLookup}
+	{#if chat.wordLookup.loading}
 		<p>Looking up word...</p>
-	{:else if chat.lookupInfo.word}
+	{:else if chat.wordLookup.word}
 		<div>
-			<p><strong>Word:</strong> {chat.lookupInfo.word}</p>
-			<p><strong>Base Form:</strong> {chat.lookupInfo.baseForm}</p>
-			<p><strong>Part of Speech:</strong> {chat.lookupInfo.partOfSpeech}</p>
-			{#if chat.lookupInfo.reading}
-				<p><strong>Reading:</strong> {chat.lookupInfo.reading}</p>
+			<p><strong>Word:</strong> {chat.wordLookup.word}</p>
+			<p><strong>Base Form:</strong> {chat.wordLookup.baseForm}</p>
+			<p><strong>Part of Speech:</strong> {chat.wordLookup.partOfSpeech}</p>
+			{#if chat.wordLookup.reading}
+				<p><strong>Reading:</strong> {chat.wordLookup.reading}</p>
 			{/if}
-			{#if chat.lookupInfo.pronunciation}
-				<p><strong>Pronunciation:</strong> {chat.lookupInfo.pronunciation}</p>
+			{#if chat.wordLookup.pronunciation}
+				<p><strong>Pronunciation:</strong> {chat.wordLookup.pronunciation}</p>
 			{/if}
 		</div>
 	{/if}

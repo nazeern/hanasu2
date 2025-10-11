@@ -2,7 +2,7 @@ import logger from '$lib/logger';
 import { RealtimeAgent, RealtimeSession } from '@openai/agents-realtime';
 import { toChatMessage } from './utils';
 
-export type LookupInfo = {
+export type WordLookup = {
 	loading: boolean;
 	word?: string;
 	baseForm?: string;
@@ -22,7 +22,7 @@ export type ChatMessage = {
 interface ChatInterface {
 	connected: boolean;
 	messages: ChatMessage[];
-	lookupInfo: LookupInfo | null;
+	wordLookup: WordLookup | null;
 	connect(ephemeralKey?: string): Promise<boolean>;
 	close(): void;
 	translate(message: ChatMessage): Promise<void>;
@@ -34,7 +34,7 @@ export class Chat implements ChatInterface {
 
 	connected = $state<boolean>(false);
 	messages = $state<ChatMessage[]>([]);
-	lookupInfo = $state<LookupInfo | null>(null);
+	wordLookup = $state<WordLookup | null>(null);
 
 	constructor(language: string, testMode: boolean) {
 		this.connected = false;
@@ -145,7 +145,7 @@ export class Chat implements ChatInterface {
 	}
 
 	async lookupWord(message: ChatMessage, tapIndex: number): Promise<void> {
-		this.lookupInfo = {
+		this.wordLookup = {
 			loading: true
 		};
 
@@ -167,7 +167,7 @@ export class Chat implements ChatInterface {
 
 			const result = await response.json();
 
-			this.lookupInfo = {
+			this.wordLookup = {
 				word: result.word,
 				baseForm: result.baseForm,
 				partOfSpeech: result.partOfSpeech,
@@ -177,7 +177,7 @@ export class Chat implements ChatInterface {
 			};
 		} catch (error) {
 			logger.error('Word lookup failed', error);
-			this.lookupInfo = null;
+			this.wordLookup = null;
 		}
 	}
 }
