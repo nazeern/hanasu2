@@ -2,13 +2,21 @@ import logger from '$lib/logger';
 import { RealtimeAgent, RealtimeSession } from '@openai/agents-realtime';
 import { toChatMessage } from './utils';
 
+export type LookupResult = {
+	word: string;
+	baseForm: string;
+	partOfSpeech: string;
+	reading?: string;
+	pronunciation?: string;
+};
+
 export type ChatMessage = {
 	text: string;
 	from: 'user' | 'agent';
 	id: string;
 	translatedText?: string;
 	translationLoading: boolean;
-	lookupWord?: string;
+	lookupResult?: LookupResult;
 	lookupLoading: boolean;
 };
 
@@ -139,22 +147,37 @@ export class Chat implements ChatInterface {
 	async lookupWord(message: ChatMessage, tapIndex: number): Promise<void> {
 		message.lookupLoading = true;
 		try {
-			const formData = new FormData();
-			formData.append('sentence', message.text);
-			formData.append('tapIndex', tapIndex.toString());
-
-			const response = await fetch('/chat?/lookupWord', {
+			const response = await fetch('/chat/lookup', {
 				method: 'POST',
-				body: formData
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({
+					sentence: message.text,
+					tapIndex: tapIndex
+				})
 			});
+
+			if (!response.ok) {
+				logger.error('Word lookup API request failed');
+				return;
+			}
 
 			const result = await response.json();
 
-			if (result.type === 'success' && result.data?.word) {
-				message.lookupWord = result.data.word;
+			if (result.word) {
+				const lookupResult: LookupResult = {
+					word: result.word,
+					baseForm: result.baseForm,
+					partOfSpeech: result.partOfSpeech,
+					reading: result.reading,
+					pronunciation: result.pronunciation
+				};
+
+				message.lookupResult = lookupResult;
 			}
 		} catch (error) {
-			logger.error('Word lookup failed');
+			logger.error('Word lookup failed', error);
 		} finally {
 			message.lookupLoading = false;
 		}

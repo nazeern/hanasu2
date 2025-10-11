@@ -15,13 +15,28 @@
 		};
 	})
 
-	// Create click handlers for word lookup (single) and translation (double)
 	const { handleSingleClick, handleDoubleClick } = createClickHandler<ChatMessage>(
 		(e, msg) => {
-			const range = document.caretRangeFromPoint(e.clientX, e.clientY);
-			if (range) {
-				chat.lookupWord(msg, range.startOffset);
-			}
+			const button = (e.target as HTMLElement).closest('button');
+			if (!button) return;
+
+			let textNode: Node | null = null;
+			let offset = 0;
+
+			const position = document.caretPositionFromPoint(e.clientX, e.clientY);
+			if (!position) return;
+			textNode = position.offsetNode;
+			offset = position.offset;
+
+			// Create a range from the start of the button to the click position
+			const fullRange = document.createRange();
+			fullRange.setStart(button, 0);
+			fullRange.setEnd(textNode, offset);
+
+			// The character index is simply the length of the text up to the click
+			const charIndex = fullRange.toString().length;
+
+			chat.lookupWord(msg, charIndex);
 		},
 		(msg) => {
 			chat.translate(msg);
@@ -49,8 +64,18 @@
 		{#if msg.lookupLoading}
 			<p>Looking up word...</p>
 		{/if}
-		{#if msg.lookupWord}
-			<p>Word: {msg.lookupWord}</p>
+		{#if msg.lookupResult}
+			<div>
+				<p><strong>Word:</strong> {msg.lookupResult.word}</p>
+				<p><strong>Base Form:</strong> {msg.lookupResult.baseForm}</p>
+				<p><strong>Part of Speech:</strong> {msg.lookupResult.partOfSpeech}</p>
+				{#if msg.lookupResult.reading}
+					<p><strong>Reading:</strong> {msg.lookupResult.reading}</p>
+				{/if}
+				{#if msg.lookupResult.pronunciation}
+					<p><strong>Pronunciation:</strong> {msg.lookupResult.pronunciation}</p>
+				{/if}
+			</div>
 		{/if}
 	</div>
 {/each}
