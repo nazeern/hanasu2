@@ -2,15 +2,6 @@ import logger from '$lib/logger';
 import { RealtimeAgent, RealtimeSession } from '@openai/agents-realtime';
 import { toChatMessage } from './utils';
 
-export type WordLookup = {
-	loading: boolean;
-	word?: string;
-	baseForm?: string;
-	partOfSpeech?: string;
-	reading?: string;
-	pronunciation?: string;
-};
-
 export type ChatMessage = {
 	text: string;
 	from: 'user' | 'agent';
@@ -22,11 +13,9 @@ export type ChatMessage = {
 interface ChatInterface {
 	connected: boolean;
 	messages: ChatMessage[];
-	wordLookup: WordLookup | null;
 	connect(ephemeralKey?: string): Promise<boolean>;
 	close(): void;
 	translate(message: ChatMessage): Promise<void>;
-	lookupWord(message: ChatMessage, tapIndex: number): Promise<void>;
 }
 
 export class Chat implements ChatInterface {
@@ -34,7 +23,6 @@ export class Chat implements ChatInterface {
 
 	connected = $state<boolean>(false);
 	messages = $state<ChatMessage[]>([]);
-	wordLookup = $state<WordLookup | null>(null);
 
 	constructor(language: string, testMode: boolean) {
 		this.connected = false;
@@ -141,43 +129,6 @@ export class Chat implements ChatInterface {
 			logger.error('Translation failed');
 		} finally {
 			message.translationLoading = false;
-		}
-	}
-
-	async lookupWord(message: ChatMessage, tapIndex: number): Promise<void> {
-		this.wordLookup = {
-			loading: true
-		};
-
-		try {
-			const response = await fetch('/chat/lookup', {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json'
-				},
-				body: JSON.stringify({
-					sentence: message.text,
-					tapIndex: tapIndex
-				})
-			});
-
-			if (!response.ok) {
-				throw new Error('Word lookup API request failed');
-			}
-
-			const result = await response.json();
-
-			this.wordLookup = {
-				word: result.word,
-				baseForm: result.baseForm,
-				partOfSpeech: result.partOfSpeech,
-				reading: result.reading,
-				pronunciation: result.pronunciation,
-				loading: false
-			};
-		} catch (error) {
-			logger.error('Word lookup failed', error);
-			this.wordLookup = null;
 		}
 	}
 }

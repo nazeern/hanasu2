@@ -2,11 +2,13 @@
 	import { onMount } from 'svelte';
 	import { Chat } from './chat-state.svelte';
 	import type { ChatMessage } from './chat-state.svelte';
+	import { Dictionary } from '$lib/dictionary.svelte';
 	import { createClickHandler } from '$lib/click-handler';
 
 	let { data } = $props()
 
 	const chat = new Chat(data.language, data.testMode)
+	const dictionary = new Dictionary()
 	onMount(() => {
 		chat.connect(data.ephemeralKey);
 
@@ -36,7 +38,7 @@
 			// The character index is simply the length of the text up to the click
 			const charIndex = fullRange.toString().length;
 
-			chat.lookupWord(msg, charIndex);
+			dictionary.lookupWord(msg.text, charIndex);
 		},
 		(msg) => {
 			chat.translate(msg);
@@ -64,19 +66,31 @@
 	</div>
 {/each}
 
-{#if chat.wordLookup}
-	{#if chat.wordLookup.loading}
+{#if dictionary.currentLookup}
+	{#if dictionary.currentLookup.loading}
 		<p>Looking up word...</p>
-	{:else if chat.wordLookup.word}
+	{:else if dictionary.currentLookup.word}
 		<div>
-			<p><strong>Word:</strong> {chat.wordLookup.word}</p>
-			<p><strong>Base Form:</strong> {chat.wordLookup.baseForm}</p>
-			<p><strong>Part of Speech:</strong> {chat.wordLookup.partOfSpeech}</p>
-			{#if chat.wordLookup.reading}
-				<p><strong>Reading:</strong> {chat.wordLookup.reading}</p>
+			<p><strong>Word:</strong> {dictionary.currentLookup.word}</p>
+			<p><strong>Base Form:</strong> {dictionary.currentLookup.baseForm}</p>
+			<p><strong>Part of Speech:</strong> {dictionary.currentLookup.partOfSpeech}</p>
+			{#if dictionary.currentLookup.reading}
+				<p><strong>Reading:</strong> {dictionary.currentLookup.reading}</p>
 			{/if}
-			{#if chat.wordLookup.pronunciation}
-				<p><strong>Pronunciation:</strong> {chat.wordLookup.pronunciation}</p>
+			{#if dictionary.currentLookup.pronunciation}
+				<p><strong>Pronunciation:</strong> {dictionary.currentLookup.pronunciation}</p>
+			{/if}
+			{#if dictionary.currentLookup.definitions}
+				<p><strong>Definitions:</strong></p>
+				<pre>{JSON.stringify(dictionary.currentLookup.definitions, null, 2)}</pre>
+			{/if}
+			{#if dictionary.currentLookup.examples && dictionary.currentLookup.examples.length > 0}
+				<p><strong>Examples:</strong></p>
+				<ul>
+					{#each dictionary.currentLookup.examples as example}
+						<li>{example}</li>
+					{/each}
+				</ul>
 			{/if}
 		</div>
 	{/if}
