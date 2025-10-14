@@ -7,7 +7,7 @@
 
 	let { data } = $props();
 
-	const chat = new Chat(data.language, data.testMode);
+	const chat = new Chat(data.language, data.testMode, data.prompt);
 	const dictionary = new Dictionary();
 	onMount(() => {
 		chat.connect(data.ephemeralKey);
@@ -57,7 +57,7 @@
 >
 	{#if !chat.connected}
 		Connecting...
-	{:else if chat.isRecording}
+	{:else if chat.recording}
 		🎤 Recording... (Release to send)
 	{:else}
 		🎤 Hold to Talk

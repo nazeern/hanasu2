@@ -12,6 +12,7 @@ export const load: PageServerLoad = async ({
 	locals: { safeGetSession, supabase }
 }) => {
 	const testMode = dev && url.searchParams.get('test') === 'true';
+	const prompt = url.searchParams.get('prompt');
 
 	const { session, user } = await safeGetSession();
 	if (!session || !user) {
@@ -27,7 +28,8 @@ export const load: PageServerLoad = async ({
 	return {
 		ephemeralKey: testMode ? undefined : ephemeralKey,
 		language: profile?.lang ?? 'ja',
-		testMode: testMode
+		testMode: testMode,
+		prompt: prompt ?? undefined
 	};
 };
 

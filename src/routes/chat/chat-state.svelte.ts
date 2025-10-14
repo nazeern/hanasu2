@@ -1,6 +1,8 @@
 import logger from '$lib/logger';
 import { RealtimeAgent, RealtimeSession } from '@openai/agents-realtime';
 import { toChatMessage } from './utils';
+import type { LangInfo } from '$lib/constants';
+import langInfoList from '$lib/constants';
 
 export type ChatMessage = {
 	text: string;
@@ -11,10 +13,12 @@ export type ChatMessage = {
 };
 
 interface ChatInterface {
+	prompt: string;
+	langInfo: LangInfo;
 	connected: boolean;
 	messages: ChatMessage[];
 	recording: boolean;
-	connect(ephemeralKey?: string): Promise<boolean>;
+	connect(ephemeralKey?: string, initialPrompt?: string): Promise<boolean>;
 	close(): void;
 	translate(message: ChatMessage): Promise<void>;
 	startRecording(): void;
@@ -24,11 +28,16 @@ interface ChatInterface {
 export class Chat implements ChatInterface {
 	private session: RealtimeSession;
 
+	prompt: string;
+	langInfo: LangInfo;
 	connected = $state<boolean>(false);
 	messages = $state<ChatMessage[]>([]);
 	recording = $state<boolean>(false);
 
-	constructor(language: string, testMode: boolean) {
+	constructor(langCode: string, testMode: boolean, prompt?: string) {
+		this.prompt = prompt ?? 'How was your day today?'
+		this.langInfo = langInfoList.find((lang) => lang.code === langCode) || langInfoList[0];
+
 		this.connected = false;
 		const agent = new RealtimeAgent({
 			name: 'Assistant',
@@ -77,7 +86,7 @@ export class Chat implements ChatInterface {
 		});
 	}
 
-	async connect(ephemeralKey?: string): Promise<boolean> {
+	async connect(ephemeralKey?: string, initialPrompt?: string): Promise<boolean> {
 		if (!ephemeralKey) {
 			return false;
 		}
@@ -90,6 +99,16 @@ export class Chat implements ChatInterface {
 				apiKey: ephemeralKey
 			});
 
+			this.session.sendMessage({
+				type: 'message',
+				role: 'user',
+				content: [
+					{
+						type: 'input_text',
+						text: `Say this in ${this.langInfo.displayName}: ${this.prompt}`
+					}
+				]
+			});
 			// Start with microphone muted to prevent automatic audio capture
 			this.session.mute(true);
 

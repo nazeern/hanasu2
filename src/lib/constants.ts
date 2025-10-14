@@ -1,4 +1,4 @@
-interface LangInfo {
+export interface LangInfo {
 	code: string;
 	displayName: string;
 	emoji: string;
