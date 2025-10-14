@@ -36,18 +36,9 @@ export const POST: RequestHandler = async ({ request, locals: { supabase } }) =>
 			logger.error('Dictionary query error', dictError);
 		}
 
-		// Combine kuromoji data with dictionary data
-		// If multiple entries exist, use the first one for now
-		const dictEntry = dictEntries && dictEntries.length > 0 ? dictEntries[0] : null;
-
 		return json({
 			word: parsedWord.surfaceForm,
-			baseForm: parsedWord.baseForm,
-			partOfSpeech: parsedWord.partOfSpeech,
-			reading: parsedWord.reading,
-			pronunciation: parsedWord.pronunciation,
-			definitions: dictEntry?.definitions || null,
-			examples: dictEntry?.featured || null
+			definitions: dictEntries, 
 		});
 	} catch (error) {
 		logger.error('Word lookup error', error);

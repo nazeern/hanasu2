@@ -5,17 +5,17 @@
 	import { Dictionary } from '$lib/dictionary.svelte';
 	import { createClickHandler } from '$lib/click-handler';
 
-	let { data } = $props()
+	let { data } = $props();
 
-	const chat = new Chat(data.language, data.testMode)
-	const dictionary = new Dictionary()
+	const chat = new Chat(data.language, data.testMode);
+	const dictionary = new Dictionary();
 	onMount(() => {
 		chat.connect(data.ephemeralKey);
 
 		return () => {
 			chat.close();
 		};
-	})
+	});
 
 	const { handleSingleClick, handleDoubleClick } = createClickHandler<ChatMessage>(
 		(e, msg) => {
@@ -51,10 +51,7 @@
 {#each chat.messages as msg (msg.id)}
 	<div>
 		<p>{msg.from}:</p>
-		<button
-			onclick={(e) => handleSingleClick(e, msg)}
-			ondblclick={() => handleDoubleClick(msg)}
-		>
+		<button onclick={(e) => handleSingleClick(e, msg)} ondblclick={() => handleDoubleClick(msg)}>
 			{msg.text}
 		</button>
 		{#if msg.translationLoading}
@@ -66,32 +63,56 @@
 	</div>
 {/each}
 
-{#if dictionary.currentLookup}
-	{#if dictionary.currentLookup.loading}
-		<p>Looking up word...</p>
-	{:else if dictionary.currentLookup.word}
-		<div>
-			<p><strong>Word:</strong> {dictionary.currentLookup.word}</p>
-			<p><strong>Base Form:</strong> {dictionary.currentLookup.baseForm}</p>
-			<p><strong>Part of Speech:</strong> {dictionary.currentLookup.partOfSpeech}</p>
-			{#if dictionary.currentLookup.reading}
-				<p><strong>Reading:</strong> {dictionary.currentLookup.reading}</p>
-			{/if}
-			{#if dictionary.currentLookup.pronunciation}
-				<p><strong>Pronunciation:</strong> {dictionary.currentLookup.pronunciation}</p>
-			{/if}
-			{#if dictionary.currentLookup.definitions}
-				<p><strong>Definitions:</strong></p>
-				<pre>{JSON.stringify(dictionary.currentLookup.definitions, null, 2)}</pre>
-			{/if}
-			{#if dictionary.currentLookup.examples && dictionary.currentLookup.examples.length > 0}
-				<p><strong>Examples:</strong></p>
-				<ul>
-					{#each dictionary.currentLookup.examples as example}
-						<li>{example}</li>
-					{/each}
-				</ul>
-			{/if}
-		</div>
-	{/if}
+{#if !dictionary.lookup}
+	{null}
+{:else if dictionary.lookup.loading}
+	<p>Looking up word...</p>
+{:else if dictionary.lookup.word}
+	<div>
+		<p><strong>Word:</strong> {dictionary.lookup.word}</p>
+
+		{#if dictionary.lookup.entries && dictionary.lookup.entries.length}
+			<p><strong>Dictionary Entries ({dictionary.lookup.entries.length}):</strong></p>
+			{#each dictionary.lookup.entries as entry}
+				<div
+					style="margin-left: 20px; margin-bottom: 15px; border-left: 2px solid #ccc; padding-left: 10px;"
+				>
+					<p><strong>Headword:</strong> {entry.word}</p>
+					{#if entry.readings.length}
+						<p><strong>Readings:</strong> {entry.readings.join(', ')}</p>
+					{/if}
+					{#if entry.featured.length}
+						<p><strong>Tags:</strong> {entry.featured.join(', ')}</p>
+					{/if}
+
+					{#if entry.definitions.length}
+						<p><strong>Definitions:</strong></p>
+						{#each entry.definitions as def, i}
+							<div style="margin-left: 15px; margin-bottom: 10px;">
+								<p><strong>{i + 1}.</strong> {def.meanings.join('; ')}</p>
+								{#if def.parts_of_speech.length}
+									<p style="font-style: italic; color: #666;">({def.parts_of_speech.join(', ')})</p>
+								{/if}
+								{#if def.tags.length}
+									<p style="font-size: 0.9em; color: #888;">{def.tags.join(', ')}</p>
+								{/if}
+								{#if def.example_ja}
+									<p><strong>Example:</strong></p>
+									<p style="margin-left: 10px;">🇯🇵 {def.example_ja}</p>
+									{#if def.example_en}
+										<p style="margin-left: 10px;">🇬🇧 {def.example_en}</p>
+									{/if}
+								{/if}
+								{#if def.see_also}
+									<p style="font-size: 0.9em;">See also: {def.see_also}</p>
+								{/if}
+							</div>
+						{/each}
+					{/if}
+				</div>
+			{/each}
+		{:else}
+			<p>No dictionary entries found.</p>
+		{/if}
+	</div>
 {/if}
