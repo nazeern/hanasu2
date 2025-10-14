@@ -34,8 +34,8 @@ export class Chat implements ChatInterface {
 	messages = $state<ChatMessage[]>([]);
 	recording = $state<boolean>(false);
 
-	constructor(langCode: string, testMode: boolean, prompt?: string) {
-		this.prompt = prompt ?? 'How was your day today?'
+	constructor(langCode: string, testMode: boolean, prompt: string) {
+		this.prompt = prompt
 		this.langInfo = langInfoList.find((lang) => lang.code === langCode) || langInfoList[0];
 
 		this.connected = false;

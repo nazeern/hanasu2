@@ -29,7 +29,7 @@ export const load: PageServerLoad = async ({
 		ephemeralKey: testMode ? undefined : ephemeralKey,
 		language: profile?.lang ?? 'ja',
 		testMode: testMode,
-		prompt: prompt ?? undefined
+		prompt: prompt ?? 'How was your day today?'
 	};
 };
 
