@@ -13,9 +13,12 @@ export type ChatMessage = {
 interface ChatInterface {
 	connected: boolean;
 	messages: ChatMessage[];
+	recording: boolean;
 	connect(ephemeralKey?: string): Promise<boolean>;
 	close(): void;
 	translate(message: ChatMessage): Promise<void>;
+	startRecording(): void;
+	stopRecording(): void;
 }
 
 export class Chat implements ChatInterface {
@@ -23,6 +26,7 @@ export class Chat implements ChatInterface {
 
 	connected = $state<boolean>(false);
 	messages = $state<ChatMessage[]>([]);
+	recording = $state<boolean>(false);
 
 	constructor(language: string, testMode: boolean) {
 		this.connected = false;
@@ -36,9 +40,10 @@ export class Chat implements ChatInterface {
 				audio: {
 					input: {
 						transcription: {
-							model: 'gpt-4o-transcribe',
-							language: language
+							model: 'gpt-4o-transcribe'
 						}
+						// NO turnDetection config - this means NO automatic turn detection at all
+						// We will manually commit audio and create responses
 					}
 				}
 			}
@@ -84,6 +89,10 @@ export class Chat implements ChatInterface {
 			await this.session.connect({
 				apiKey: ephemeralKey
 			});
+
+			// Start with microphone muted to prevent automatic audio capture
+			this.session.mute(true);
+
 			this.connected = true;
 			return true;
 		} catch {
@@ -130,5 +139,15 @@ export class Chat implements ChatInterface {
 		} finally {
 			message.translationLoading = false;
 		}
+	}
+
+	startRecording(): void {
+		this.recording = true;
+		this.session.mute(false);
+	}
+
+	stopRecording(): void {
+		this.session.mute(true);
+		this.recording = false;
 	}
 }

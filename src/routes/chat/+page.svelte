@@ -47,7 +47,23 @@
 </script>
 
 <p>CHAT PAGE</p>
-<p>success {chat.connected}</p>
+<p>Connected: {chat.connected}</p>
+
+<button
+	onpointerdown={() => chat.startRecording()}
+	onpointerup={() => chat.stopRecording()}
+	onpointerleave={() => chat.stopRecording()}
+	disabled={!chat.connected}
+>
+	{#if !chat.connected}
+		Connecting...
+	{:else if chat.isRecording}
+		🎤 Recording... (Release to send)
+	{:else}
+		🎤 Hold to Talk
+	{/if}
+</button>
+
 {#each chat.messages as msg (msg.id)}
 	<div>
 		<p>{msg.from}:</p>
