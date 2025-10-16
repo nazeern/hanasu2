@@ -8,7 +8,7 @@
 	let { data } = $props();
 
 	const chat = new Chat(data.language, data.testMode, data.prompt);
-	const dictionary = new Dictionary();
+	const dictionary = new Dictionary(data.language);
 	onMount(() => {
 		chat.connect(data.ephemeralKey);
 
@@ -94,6 +94,9 @@
 					style="margin-left: 20px; margin-bottom: 15px; border-left: 2px solid #ccc; padding-left: 10px;"
 				>
 					<p><strong>Headword:</strong> {entry.word}</p>
+					<button onclick={() => dictionary.toggleSave(entry.id)}>
+						{entry.vocabulary ? 'Remove from Vocabulary' : 'Save to Vocabulary'}
+					</button>
 					{#if entry.readings.length}
 						<p><strong>Readings:</strong> {entry.readings.join(', ')}</p>
 					{/if}

@@ -1,4 +1,5 @@
 import logger from '$lib/logger';
+import type { Tables } from '../database.types';
 
 export type Definition = {
 	tags: string[];
@@ -15,6 +16,7 @@ export type DictEntry = {
 	featured: string[];
 	readings: string[];
 	definitions: Definition[];
+	vocabulary: Tables<'vocabulary'> | null;
 };
 
 export type WordLookup = {
@@ -24,14 +26,15 @@ export type WordLookup = {
 };
 
 export class Dictionary {
-
+	langCode: string;
 	lookup = $state<WordLookup | null>(null);
 
+	constructor(langCode: string) {
+		this.langCode = langCode;
+	}
+
 	async lookupWord(sentence: string, tapIndex: number): Promise<void> {
-		// Set loading state
-		this.lookup = {
-			loading: true
-		};
+		this.lookup = { loading: true };
 
 		try {
 			const response = await fetch('/chat/lookup', {
@@ -41,7 +44,8 @@ export class Dictionary {
 				},
 				body: JSON.stringify({
 					sentence,
-					tapIndex
+					tapIndex,
+					lang: this.langCode
 				})
 			});
 
@@ -51,7 +55,6 @@ export class Dictionary {
 
 			const result = await response.json();
 
-			// Update state with full lookup result
 			this.lookup = {
 				word: result.word,
 				entries: result.definitions,
@@ -65,5 +68,32 @@ export class Dictionary {
 
 	clear(): void {
 		this.lookup = null;
+	}
+
+	async toggleSave(wordId: number): Promise<void> {
+		const entry = this.lookup?.entries?.find((e) => e.id === wordId);
+		if (!entry) return;
+
+		const isSaved = !!entry.vocabulary;
+		const response = await fetch('/vocabulary', {
+			method: isSaved ? 'DELETE' : 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({ word_id: wordId, lang: this.langCode })
+		});
+
+		if (!response.ok) {
+			const action = isSaved ? 'unsave' : 'save';
+			logger.error(`Failed to ${action} word`);
+			throw new Error(`Failed to ${action} word`);
+		}
+
+		if (isSaved) {
+			entry.vocabulary = null;
+		} else {
+			const result = await response.json();
+			entry.vocabulary = result.vocabulary;
+		}
+
+		logger.info(`Word ${wordId} ${isSaved ? 'removed from' : 'saved to'} vocabulary`);
 	}
 }
