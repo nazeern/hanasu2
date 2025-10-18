@@ -68,6 +68,12 @@ export class Chat implements ChatInterface {
 				id: 'test-message-1',
 				translationLoading: false
 			});
+			this.messages.push({
+				text: 'うなぎです',
+				from: 'user',
+				id: 'test-message-2',
+				translationLoading: false
+			})
 		}
 
 		this.session.on('history_updated', (items) => {
@@ -86,7 +92,7 @@ export class Chat implements ChatInterface {
 		});
 	}
 
-	async connect(ephemeralKey?: string, initialPrompt?: string): Promise<boolean> {
+	async connect(ephemeralKey?: string): Promise<boolean> {
 		if (!ephemeralKey) {
 			return false;
 		}
