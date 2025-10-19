@@ -10,6 +10,9 @@ export type ChatMessage = {
 	id: string;
 	translatedText?: string;
 	translationLoading: boolean;
+	status: 'completed' | 'in_progress' | 'incomplete';
+	tips?: string;
+	tipsLoading: boolean;
 };
 
 interface ChatInterface {
@@ -21,6 +24,7 @@ interface ChatInterface {
 	connect(ephemeralKey?: string, initialPrompt?: string): Promise<boolean>;
 	close(): void;
 	translate(message: ChatMessage): Promise<void>;
+	aiAssist(message: ChatMessage): Promise<void>;
 	startRecording(): void;
 	stopRecording(): void;
 }
@@ -35,7 +39,7 @@ export class Chat implements ChatInterface {
 	recording = $state<boolean>(false);
 
 	constructor(langCode: string, testMode: boolean, prompt: string) {
-		this.prompt = prompt
+		this.prompt = prompt;
 		this.langInfo = langInfoList.find((lang) => lang.code === langCode) || langInfoList[0];
 
 		this.connected = false;
@@ -66,14 +70,18 @@ export class Chat implements ChatInterface {
 				text: 'こんにちは',
 				from: 'agent',
 				id: 'test-message-1',
-				translationLoading: false
+				translationLoading: false,
+				status: 'completed',
+				tipsLoading: false
 			});
 			this.messages.push({
-				text: 'うなぎです',
+				text: 'よろしくお願う',
 				from: 'user',
 				id: 'test-message-2',
-				translationLoading: false
-			})
+				translationLoading: false,
+				status: 'completed',
+				tipsLoading: false
+			});
 		}
 
 		this.session.on('history_updated', (items) => {
@@ -82,12 +90,24 @@ export class Chat implements ChatInterface {
 				.filter((item) => item.type === 'message')
 				.forEach((item) => {
 					const incomingMessage = toChatMessage(item);
-					let existingIdx = this.messages.findLastIndex((msg) => msg.id === incomingMessage.id);
-					if (existingIdx >= 0) {
-						this.messages[existingIdx] = incomingMessage;
+					if (!incomingMessage) return;
+					let existingMessage = this.messages.findLast((msg) => msg.id === incomingMessage.id);
+					let newMessage: ChatMessage;
+					if (existingMessage) {
+						newMessage = {
+							...existingMessage,
+							...incomingMessage
+						};
+						existingMessage = newMessage;
 					} else {
-						this.messages.push(incomingMessage);
+						newMessage = {
+							...incomingMessage,
+							translationLoading: false,
+							tipsLoading: false
+						};
+						this.messages.push(newMessage);
 					}
+					this.aiAssist(newMessage);
 				});
 		});
 	}
@@ -163,6 +183,40 @@ export class Chat implements ChatInterface {
 			logger.error('Translation failed');
 		} finally {
 			message.translationLoading = false;
+		}
+	}
+
+	async aiAssist(message: ChatMessage): Promise<void> {
+		if (message.from !== 'user' || message.status !== 'completed') return;
+		if (message.tipsLoading || message.tips !== undefined) return;
+
+		message.tipsLoading = true;
+		try {
+			const messageIndex = this.messages.findIndex((msg) => msg.id === message.id);
+			const recentMessages = this.messages.slice(messageIndex - 2, messageIndex);
+			const response = await fetch('/chat/assist', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({
+					text: message.text,
+					langDisplayName: this.langInfo.displayName,
+					recentMessages
+				})
+			});
+
+			if (!response.ok) {
+				logger.error('AI assist API request failed');
+				return;
+			}
+
+			const result = await response.json();
+			message.tips = result.tip;
+		} catch (error) {
+			logger.error('AI assist failed');
+		} finally {
+			message.tipsLoading = false;
 		}
 	}
 

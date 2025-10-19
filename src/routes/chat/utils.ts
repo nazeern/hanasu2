@@ -1,7 +1,15 @@
 import type { RealtimeMessageItem } from '@openai/agents-realtime';
-import type { ChatMessage } from './chat-state.svelte';
 
-export function toChatMessage(oaiMessage: RealtimeMessageItem): ChatMessage {
+type OAIMessage = {
+	text: string;
+	from: 'user' | 'agent';
+	id: string;
+	status: 'completed' | 'in_progress' | 'incomplete';
+}
+
+export function toChatMessage(oaiMessage: RealtimeMessageItem): OAIMessage | null {
+	if (oaiMessage.role !== 'user' && oaiMessage.role !== 'assistant') return null;
+
 	const text = oaiMessage.content
 		.map((segment) => {
 			switch (segment.type) {
@@ -14,11 +22,12 @@ export function toChatMessage(oaiMessage: RealtimeMessageItem): ChatMessage {
 		})
 		.filter(Boolean)
 		.join(' ');
+	if (!text) return null;
 
 	return {
 		text,
 		from: oaiMessage.role == 'assistant' ? 'agent' : 'user',
 		id: oaiMessage.itemId,
-		translationLoading: false
+		status: oaiMessage.status,
 	};
 }

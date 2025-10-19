@@ -20,9 +20,7 @@ export function createClickHandler<T>(
 		}
 
 		// Delay execution to check if double-click is coming
-		logger.info('Single click detected, waiting for double click...');
 		clickTimer = setTimeout(() => {
-			logger.info('No double click detected, executing single click action.');
 			onSingleClick(e, data);
 			clickTimer = null;
 		}, delay);
@@ -31,7 +29,6 @@ export function createClickHandler<T>(
 	const handleDoubleClick = (data: T) => {
 		// Cancel single-click action
 		if (clickTimer) {
-			logger.info('Double click detected, cancelling single click action.');
 			clearTimeout(clickTimer);
 			clickTimer = null;
 		}

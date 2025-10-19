@@ -70,11 +70,15 @@
 		<button onclick={(e) => handleSingleClick(e, msg)} ondblclick={() => handleDoubleClick(msg)}>
 			{msg.text}
 		</button>
+		<p>{msg.status}</p>
 		{#if msg.translationLoading}
 			<p>Translating...</p>
 		{/if}
 		{#if msg.translatedText}
 			<p>{msg.translatedText}</p>
+		{/if}
+		{#if msg.tips}
+			<p><strong>Tips:</strong> {msg.tips}</p>
 		{/if}
 	</div>
 {/each}
