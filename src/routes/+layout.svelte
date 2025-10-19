@@ -3,9 +3,10 @@
 	import favicon from '$lib/assets/favicon.svg';
 	import { invalidate } from '$app/navigation';
 	import { onMount } from 'svelte';
+	import Navbar from '$lib/components/Navbar.svelte';
 
 	let { data, children } = $props();
-	let { supabase, session } = $derived(data);
+	let { supabase, session, userInitial } = $derived(data);
 
 	onMount(() => {
 		const { data } = supabase.auth.onAuthStateChange((_event, _session) => {
@@ -21,5 +22,9 @@
 <svelte:head>
 	<link rel="icon" href={favicon} />
 </svelte:head>
+
+{#if session}
+	<Navbar {data} />
+{/if}
 
 {@render children?.()}
