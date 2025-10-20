@@ -42,7 +42,7 @@ export const actions: Actions = {
 			logger.info('successful login with email & password');
 			throw redirect(302, '/dashboard');
 		} else {
-			logger.warn('failed to login, attempting signup...');
+			logger.warn('failed to login');
 			logger.info(loginError);
 			return fail(400, { error: 'Incorrect username or password.' })
 		}
