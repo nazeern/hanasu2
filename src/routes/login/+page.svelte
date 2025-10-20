@@ -37,4 +37,10 @@
 	</div>
 </form>
 
+<form method="POST" action="?/googleSignIn" class="row flex flex-center">
+	<div class="col-6 form-widget">
+		<button>Continue with Google</button>
+	</div>
+</form>
+
 <p>Need an account? <a href="/signup" aria-label="Link to Signup Page">Sign up here</a></p>

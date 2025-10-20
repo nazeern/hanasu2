@@ -46,5 +46,26 @@ export const actions: Actions = {
 			logger.info(loginError);
 			return fail(400, { error: 'Incorrect username or password.' })
 		}
+	},
+	googleSignIn: async ({ locals: { supabase } }) => {
+		const { data, error } = await supabase.auth.signInWithOAuth({
+			provider: 'google',
+			options: {
+				redirectTo: `${PUBLIC_SITE_URL}/auth/callback`
+			}
+		});
+
+		if (error) {
+			logger.error('Google OAuth initiation failed');
+			logger.error(error);
+			return fail(500, { error: 'Failed to initiate Google sign-in.' });
+		}
+
+		if (data.url) {
+			logger.info(data.url)
+			redirect(303, data.url);
+		}
+
+		return fail(500, { error: 'Failed to get OAuth URL.' });
 	}
 };
