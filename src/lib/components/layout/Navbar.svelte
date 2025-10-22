@@ -1,7 +1,7 @@
 <script lang="ts">
 	import Button from '$lib/components/ui/Button.svelte';
 	import Card from '$lib/components/ui/Card.svelte';
-	import CardSection from '$lib/components/ui/CardSection.svelte';
+	import Content from '$lib/components/ui/Content.svelte';
 	import type { LayoutData } from '../../../routes/$types';
 
 	let { data }: { data: LayoutData } = $props();
@@ -35,18 +35,18 @@
 				<!-- Dropdown menu -->
 				<Card class="absolute right-0 z-20 mt-2 w-56">
 					<!-- User email -->
-					<CardSection bordered>
+					<Content bordered>
 						<p class="truncate text-sm text-text-secondary">{session?.user?.email}</p>
-					</CardSection>
+					</Content>
 
 					<!-- Logout button -->
-					<CardSection class="p-2">
+					<Content class="p-2">
 						<form method="POST" action="/logout">
 							<Button type="submit" variant="menu" size="sm" fullWidth>
 								Log out
 							</Button>
 						</form>
-					</CardSection>
+					</Content>
 				</Card>
 			{/if}
 		</div>
