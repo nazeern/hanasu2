@@ -3,7 +3,7 @@
 	import favicon from '$lib/assets/favicon.svg';
 	import { invalidate } from '$app/navigation';
 	import { onMount } from 'svelte';
-	import Navbar from '$lib/components/Navbar.svelte';
+	import Navbar from '$lib/components/layout/Navbar.svelte';
 
 	let { data, children } = $props();
 	let { supabase, session, userInitial } = $derived(data);
