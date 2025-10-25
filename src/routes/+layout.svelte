@@ -3,10 +3,10 @@
 	import favicon from '$lib/assets/favicon.svg';
 	import { invalidate } from '$app/navigation';
 	import { onMount } from 'svelte';
-	import Navbar from '$lib/components/layout/Navbar.svelte';
+	import Navbar from '$lib/components/Navbar.svelte';
 
 	let { data, children } = $props();
-	let { supabase, session, userInitial } = $derived(data);
+	let { supabase, session } = $derived(data);
 
 	onMount(() => {
 		const { data } = supabase.auth.onAuthStateChange((_event, _session) => {
