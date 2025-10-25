@@ -22,16 +22,14 @@
 	};
 </script>
 
-<form use:enhance={handleSubmit} method="POST" action="?/signup" class="row flex flex-center">
-	<div class="flex flex-col gap-4">
-		<Input name="email" type="email" label="Email" />
-		<Input name="password" type="password" label="Password" />
-		<div class="cf-turnstile" data-sitekey={PUBLIC_TURNSTILE_SITEKEY}></div>
-		<Button class="w-full" variant="primary">
-			{loading ? 'Loading...' : 'Log In'}
-		</Button>
-		{#if form?.error}
-			<Message text={form.error} variant="warning" />
-		{/if}
-	</div>
+<form use:enhance={handleSubmit} method="POST" action="?/signup" class="w-full flex flex-col gap-4">
+	<Input name="email" type="email" label="Email" />
+	<Input name="password" type="password" label="Password" />
+	<div class="cf-turnstile" data-sitekey={PUBLIC_TURNSTILE_SITEKEY}></div>
+	<Button class="w-full" variant="primary">
+		{loading ? 'Loading...' : 'Log In'}
+	</Button>
+	{#if form?.error}
+		<Message text={form.error} variant="warning" />
+	{/if}
 </form>

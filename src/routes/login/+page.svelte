@@ -12,7 +12,7 @@
 </svelte:head>
 
 <div class='flex items-center justify-center w-full h-screen'>
-	<div class="flex flex-col items-center gap-4">
+	<div class="w-96 flex flex-col items-center gap-4">
 		<Welcome />
 		<OAuth />
 		<Divider />
