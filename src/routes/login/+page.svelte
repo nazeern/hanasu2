@@ -17,6 +17,6 @@
 		<OAuth />
 		<Divider />
 		<LoginForm {form} />
-		<p>Need an account? <a href="/signup" aria-label="Link to Signup Page">Sign up here</a></p>
+		<p class="w-full text-left">Need an account? <a href="/signup" aria-label="Link to Signup Page" class="font-bold text-primary-600">Sign up here</a></p>
 	</div>
 </div>
