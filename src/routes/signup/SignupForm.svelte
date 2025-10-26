@@ -5,9 +5,10 @@
 	import Input from '$lib/components/Input.svelte';
 	import Message from '$lib/components/Message.svelte';
 	import type { SubmitFunction } from '@sveltejs/kit';
+	import LangSelect from './LangSelect.svelte';
 
 	interface Props {
-		form?: { error?: string } | null;
+		form?: { error?: string; message?: string } | null;
 	}
 
 	let { form }: Props = $props();
@@ -22,14 +23,18 @@
 	};
 </script>
 
-<form use:enhance={handleSubmit} method="POST" action="?/login" class="w-full flex flex-col gap-4">
+<form use:enhance={handleSubmit} method="POST" action="?/signup" class="w-full flex flex-col gap-4">
 	<Input name="email" type="email" label="Email" />
 	<Input name="password" type="password" label="Password" />
+	<Input name="name" type="text" label="Preferred Name" />
+	<LangSelect />
 	<div class="cf-turnstile" data-sitekey={PUBLIC_TURNSTILE_SITEKEY}></div>
 	<Button class="w-full" variant="primary">
-		{loading ? 'Logging in...' : 'Log In'}
+		{loading ? 'Signing up...' : 'Sign Up'}
 	</Button>
-	{#if form?.error}
+	{#if form?.message}
+		<Message text={form.message} variant="success" />
+	{:else if form?.error}
 		<Message text={form.error} variant="warning" />
 	{/if}
 </form>

@@ -12,7 +12,7 @@ export const load: PageServerLoad = async ({ locals: { safeGetSession } }) => {
 };
 
 export const actions: Actions = {
-	signup: async (event) => {
+	login: async (event) => {
 		const url = PUBLIC_SITE_URL;
 		const {
 			request,

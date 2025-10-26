@@ -58,15 +58,12 @@ export const actions: Actions = {
 			logger.warn('failed signup');
 			logger.info(signupError);
 			return fail(400, {
-				success: false,
-				email,
-				message: 'There was an issue. Please contact support.'
+				error: 'There was an issue. Please contact support.'
 			});
 		}
 
 		logger.info('sign up successful, email sent');
 		return {
-			success: true,
 			message: 'Please check your email for a magic link to log into the website.'
 		};
 	}
