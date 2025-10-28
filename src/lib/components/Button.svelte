@@ -2,9 +2,9 @@
 	import { cn } from '$lib/utils/cn';
 	import { buttonVariants, type ButtonVariant } from '$lib/utils/styles';
 	import type { Snippet } from 'svelte';
-	import type { HTMLAttributes } from 'svelte/elements';
+	import type { HTMLButtonAttributes } from 'svelte/elements';
 
-	interface Props extends HTMLAttributes<HTMLButtonElement> {
+	interface Props extends HTMLButtonAttributes {
 		class?: string;
 		children?: Snippet;
 		variant: ButtonVariant;

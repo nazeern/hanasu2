@@ -6,7 +6,7 @@ export interface LangInfo {
 
 const langInfoList: LangInfo[] = [
 	{
-		code: 'jp',
+		code: 'ja',
 		displayName: 'Japanese',
 		emoji: '🇯🇵'
 	},

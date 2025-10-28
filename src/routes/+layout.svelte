@@ -24,7 +24,7 @@
 </svelte:head>
 
 {#if session}
-	<Navbar {data} />
+	<Navbar {...data} />
 {/if}
 
 {@render children?.()}
