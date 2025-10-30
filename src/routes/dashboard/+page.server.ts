@@ -19,7 +19,7 @@ function getRandomPrompts(count: number): string[] {
 	return shuffled.slice(0, count);
 }
 
-export const load: PageServerLoad = async ({ url, locals: { supabase, safeGetSession } }) => {
+export const load: PageServerLoad = async ({ locals: { supabase, safeGetSession } }) => {
 	const { session } = await safeGetSession();
 
 	if (!session) {

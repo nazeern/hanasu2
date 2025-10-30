@@ -9,6 +9,7 @@
 	import Button from './Button.svelte';
 	import { enhance } from '$app/forms';
 	import { cn } from '$lib/utils/cn';
+	import Skeleton from './Skeleton.svelte';
 
 	interface Props {
 		langInfo?: LangInfo;
@@ -16,10 +17,13 @@
 
 	let { langInfo }: Props = $props();
 	let dropdownOpen = $state(false);
+	let loading = $state(false);
 
 	function handleSubmit() {
+		loading = true;
 		return async ({ update }: { update: () => Promise<void> }) => {
 			await update();
+			loading = false;
 			dropdownOpen = false;
 		};
 	}
@@ -38,14 +42,18 @@
 </script>
 
 <button class="relative" bind:this={buttonRef} onclick={() => (dropdownOpen = !dropdownOpen)}>
-	<div class="pointer-events-none flex items-center gap-1">
-		<Message class="text-2xl" text={langInfo?.emoji ?? ''} />
-		{#if dropdownOpen}
-			<ChevronUp />
-		{:else}
-			<ChevronDown />
-		{/if}
-	</div>
+	{#if loading}
+		<Skeleton class='w-8' />
+	{:else}
+		<div class="pointer-events-none flex items-center gap-1">
+			<Message class="text-2xl" text={langInfo?.emoji ?? ''} />
+			{#if dropdownOpen}
+				<ChevronUp />
+			{:else}
+				<ChevronDown />
+			{/if}
+		</div>
+	{/if}
 	{#if dropdownOpen}
 		<Container class="absolute top-13 -right-3" onclick={(e) => e.stopPropagation()}>
 			<form method="POST" action="/?/updateLanguage" use:enhance={handleSubmit}>
