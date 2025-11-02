@@ -1,5 +1,6 @@
 import { redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
+import type { Definition, DictEntry } from '$lib/dictionary.svelte';
 
 const CONVERSATION_PROMPTS = [
 	'How was your day today?',
@@ -19,18 +20,49 @@ function getRandomPrompts(count: number): string[] {
 	return shuffled.slice(0, count);
 }
 
-export const load: PageServerLoad = async ({ locals: { supabase, safeGetSession } }) => {
-	const { session } = await safeGetSession();
+export const load: PageServerLoad = async ({ parent, locals: { supabase, safeGetSession } }) => {
+	const { user, session } = await safeGetSession();
 
-	if (!session) {
+	if (!session || !user) {
 		throw redirect(303, '/login');
 	}
-	const { data: profile } = await supabase
-		.from('profiles')
-		.select('*')
-		.eq('id', session.user.id)
-		.limit(1)
-		.single();
 
-	return { email: session.user.email, profile: profile, prompts: getRandomPrompts(3) };
+	const { profile, langInfo } = await parent();
+	if (!profile || !langInfo) {
+		throw redirect(303, '/login');
+	}
+
+	const { data: vocab } = await supabase
+		.from('vocabulary')
+		.select('*')
+		.eq('user_id', user.id)
+		.eq('lang', 'ja')
+		.lte('due', new Date().toISOString())
+		.order('due', { ascending: true })
+		.limit(1)
+		.maybeSingle();
+
+	let nextVocab: DictEntry | null = null;
+	if (vocab) {
+		const { data: word } = await supabase
+			.from('ja_dict')
+			.select('*')
+			.eq('id', vocab.word_id)
+			.maybeSingle();
+
+		if (word) {
+			nextVocab = {
+				...word,
+				definitions: word.definitions as Definition[],
+				vocabulary: vocab
+			};
+		}
+	}
+
+	return {
+		email: session.user.email,
+		profile: profile,
+		prompts: getRandomPrompts(3),
+		nextVocab
+	};
 };

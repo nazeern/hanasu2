@@ -1,11 +1,10 @@
 <script lang="ts">
-	import type { LangInfo } from '$lib/constants';
+	import { langInfoList, type LangInfo } from '$lib/constants';
 	import { onMount } from 'svelte';
 	import Message from './Message.svelte';
 	import Container from './Container.svelte';
 	import ChevronUp from '$lib/icons/ChevronUp.svelte';
 	import ChevronDown from '$lib/icons/ChevronDown.svelte';
-	import langInfoList from '$lib/constants';
 	import Button from './Button.svelte';
 	import { enhance } from '$app/forms';
 	import { cn } from '$lib/utils/cn';

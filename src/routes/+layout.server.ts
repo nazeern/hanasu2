@@ -1,6 +1,6 @@
 import type { User } from '@supabase/supabase-js';
 import type { LayoutServerLoad } from './$types';
-import langInfoList from '$lib/constants';
+import { langInfoList, type LangInfo } from '$lib/constants';
 
 function getUserInitial(user: User | null | undefined): string {
 	if (!user) return '?';
@@ -28,6 +28,7 @@ export const load: LayoutServerLoad = async ({ locals: { safeGetSession, supabas
 		session,
 		user,
 		cookies: cookies.getAll(),
+		// Variables below can be accessed via `parent()` in child pages
 		userInitial: getUserInitial(user),
 		userEmail: user?.email ?? 'Guest',
 		profile: profile,

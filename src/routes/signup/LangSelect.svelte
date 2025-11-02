@@ -1,5 +1,5 @@
 <script>
-	import langInfoList from '$lib/constants';
+	import { langInfoList } from '$lib/constants';
 </script>
 
 <div class="w-full flex flex-col gap-1">

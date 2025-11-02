@@ -2,7 +2,7 @@
 	import { enhance } from '$app/forms';
 	import { PUBLIC_TURNSTILE_SITEKEY } from '$env/static/public';
 	import type { SubmitFunction } from '@sveltejs/kit';
-	import langInfoList from '$lib/constants';
+	import { langInfoList } from '$lib/constants';
 	import Welcome from './Welcome.svelte';
 	import OAuth from './OAuth.svelte';
 	import Divider from '$lib/components/Divider.svelte';

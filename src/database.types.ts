@@ -16,25 +16,25 @@ export type Database = {
     Tables: {
       ja_dict: {
         Row: {
-          definitions: Json | null
-          featured: string[] | null
+          definitions: Json
+          featured: string[]
           id: number
-          readings: string[] | null
-          word: string | null
+          readings: string[]
+          word: string
         }
         Insert: {
-          definitions?: Json | null
-          featured?: string[] | null
+          definitions: Json
+          featured: string[]
           id?: number
-          readings?: string[] | null
-          word?: string | null
+          readings: string[]
+          word: string
         }
         Update: {
-          definitions?: Json | null
-          featured?: string[] | null
+          definitions?: Json
+          featured?: string[]
           id?: number
-          readings?: string[] | null
-          word?: string | null
+          readings?: string[]
+          word?: string
         }
         Relationships: []
       }

@@ -1,8 +1,7 @@
 import logger from '$lib/logger';
 import { RealtimeAgent, RealtimeSession } from '@openai/agents-realtime';
 import { toChatMessage } from './utils';
-import type { LangInfo } from '$lib/constants';
-import langInfoList from '$lib/constants';
+import { langInfoList, type LangInfo } from '$lib/constants';
 
 export type ChatMessage = {
 	text: string;
