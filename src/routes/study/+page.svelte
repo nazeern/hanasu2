@@ -1,15 +1,13 @@
 <script lang="ts">
 	import { Study } from '$lib/study.svelte';
-	import type { Definition } from '$lib/dictionary.svelte';
+	import Vocab from '../dashboard/Vocab.svelte';
+	import ProgressBar from '$lib/components/ProgressBar.svelte';
+	import Input from '$lib/components/Input.svelte';
 
 	let { data } = $props();
 
 	const study = new Study(data.studyQueue);
-
-	function formatDefinitions(defsJson: unknown): Definition[] {
-		if (!defsJson || !Array.isArray(defsJson)) return [];
-		return defsJson as Definition[];
-	}
+	const totalWords = data.studyQueue.length;
 </script>
 
 <h1>Study Vocabulary</h1>
@@ -22,29 +20,14 @@
 	</div>
 {:else if study.currentItem}
 	<div>
-		<p><strong>Words remaining:</strong> {study.totalWords}</p>
+		<ProgressBar remaining={study.totalWords} total={totalWords} class="mb-6" />
 
-		<div style="margin: 20px 0;">
-			<p><strong>Word:</strong> {study.currentItem.dictEntry.word}</p>
-
-			{#if study.currentItem.dictEntry.featured && study.currentItem.dictEntry.featured.length > 0}
-				<p><strong>Tags:</strong> {study.currentItem.dictEntry.featured.join(', ')}</p>
-			{/if}
-
-			<p><strong>Definitions:</strong></p>
-			{#each formatDefinitions(study.currentItem.dictEntry.definitions) as def, i}
-				<div style="margin-left: 15px;">
-					<p>{i + 1}. {def.meanings.join('; ')}</p>
-					{#if def.parts_of_speech.length > 0}
-						<p style="font-style: italic;">({def.parts_of_speech.join(', ')})</p>
-					{/if}
-				</div>
-			{/each}
-		</div>
+		<Vocab nextVocab={study.currentItem} />
 
 		{#if study.state === 'idle'}
 			<div>
-				<input
+				<Input
+					name="answer"
 					type="text"
 					bind:value={study.currentAnswer}
 					placeholder="Type the reading..."

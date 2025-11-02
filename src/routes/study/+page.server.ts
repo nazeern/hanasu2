@@ -1,11 +1,6 @@
 import { error, redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
-import type { Tables } from '../../database.types';
-
-type StudyItem = {
-	vocabulary: Tables<'vocabulary'>;
-	dictEntry: Tables<'ja_dict'>;
-};
+import type { Definition, DictEntry } from '$lib/dictionary.svelte';
 
 export const load: PageServerLoad = async ({ locals: { safeGetSession, supabase } }) => {
 	const { session, user } = await safeGetSession();
@@ -49,12 +44,17 @@ export const load: PageServerLoad = async ({ locals: { safeGetSession, supabase 
 	}
 	const wordMap = new Map(dictEntries.map((entry) => [entry.id, entry]));
 
-	const studyQueue = vocabularyRecords
-		.map((vocab) => ({
-			vocabulary: vocab,
-			dictEntry: wordMap.get(vocab.word_id) || null
-		}))
-		.filter((item): item is StudyItem => item.dictEntry !== null);
+	const studyQueue: DictEntry[] = vocabularyRecords
+		.map((vocab) => {
+			const word = wordMap.get(vocab.word_id);
+			if (!word) return null;
+			return {
+				...word,
+				definitions: word.definitions as Definition[],
+				vocabulary: vocab
+			} as DictEntry;
+		})
+		.filter((item): item is DictEntry => item !== null);
 
 	return { studyQueue, language: profile.lang };
 };

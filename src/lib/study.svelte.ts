@@ -1,21 +1,17 @@
 import logger from '$lib/logger';
 import type { Tables } from '../database.types';
+import type { DictEntry } from '$lib/dictionary.svelte';
 
 export type StudyState = 'idle' | 'submitting' | 'correct' | 'incorrect';
 
-export type StudyItem = {
-	vocabulary: Tables<'vocabulary'>;
-	dictEntry: Tables<'ja_dict'>;
-};
-
 export class Study {
-	items = $state<StudyItem[]>([]);
+	items = $state<DictEntry[]>([]);
 	currentAnswer = $state('');
 	state = $state<StudyState>('idle');
 	submitting = $state<boolean>(false);
 	startTime = $state<number>(Date.now());
 
-	constructor(studyItems: StudyItem[]) {
+	constructor(studyItems: DictEntry[]) {
 		this.items = studyItems
 		this.currentAnswer = ''
 		this.state = 'idle'
@@ -23,7 +19,7 @@ export class Study {
 		this.startTime = Date.now()
 	}
 
-	get currentItem(): StudyItem | null {
+	get currentItem(): DictEntry | null {
 		return this.items.at(-1) || null
 	}
 
@@ -32,9 +28,9 @@ export class Study {
 	}
 
 	async submitAnswer(): Promise<void> {
-		if (!this.currentItem || this.submitting == true) return;
+		if (!this.currentItem || !this.currentItem.vocabulary || this.submitting == true) return;
 
-		const correct = this.currentItem.dictEntry.readings?.includes(this.currentAnswer);
+		const correct = this.currentItem.readings?.includes(this.currentAnswer);
 
 		const newVocabulary: Tables<'vocabulary'> = {
 			...this.currentItem.vocabulary
