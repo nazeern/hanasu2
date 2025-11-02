@@ -22,7 +22,7 @@
 	<div>
 		<ProgressBar remaining={study.totalWords} total={totalWords} class="mb-6" />
 
-		<Vocab nextVocab={study.currentItem} />
+		<Vocab nextVocab={study.currentItem} state={study.state} />
 
 		{#if study.state === 'idle'}
 			<div>
