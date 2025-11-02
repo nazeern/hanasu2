@@ -10,7 +10,7 @@
 </script>
 
 <div class="w-full">
-	<p class="text-lg">
+	<p class="text-xl mb-1">
 		<span class="font-semibold text-neutral-600">{index + 1}.</span>
 		{definition.meanings}
 	</p>
