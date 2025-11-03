@@ -8,11 +8,21 @@
 		class?: string;
 		children?: Snippet;
 		variant: ButtonVariant;
+		href?: string;
 	}
 
-	let { class: className, children, variant, ...rest }: Props = $props();
+	let { class: className, children, variant, href, ...rest }: Props = $props();
 </script>
 
-<button class={cn('font-semibold px-2 py-1 rounded-lg', buttonVariants[variant], className)} {...rest}>
-	{@render children?.()}
-</button>
+{#if href}
+	<a {href} class={cn('font-semibold px-2 py-1 rounded-lg', buttonVariants[variant], className)}>
+		{@render children?.()}
+	</a>
+{:else}
+	<button
+		class={cn('font-semibold px-2 py-1 rounded-lg', buttonVariants[variant], className)}
+		{...rest}
+	>
+		{@render children?.()}
+	</button>
+{/if}

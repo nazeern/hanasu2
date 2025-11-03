@@ -9,9 +9,10 @@
 	interface Props {
 		nextVocab: DictEntry;
 		state?: StudyState;
+		hideWord?: boolean;
 	}
 
-	let { nextVocab, state = 'idle' }: Props = $props();
+	let { nextVocab, state = 'idle', hideWord = false }: Props = $props();
 
 	const borderClass = $derived(
 		state === 'correct'
@@ -23,7 +24,9 @@
 </script>
 
 <Container class={cn('relative w-full flex flex-col items-center mb-4 lg:px-12', borderClass)}>
-	<p class="mt-8 mb-4 text-3xl">{nextVocab.word}</p>
+	{#if !hideWord}
+		<p class="mt-8 mb-4 text-3xl">{nextVocab.word}</p>
+	{/if}
 	<div class="flex items-center gap-1 mb-1">
 		{#each nextVocab.featured as tag}
 			<Tag {tag} />
@@ -31,7 +34,7 @@
 	</div>
 	<div class="flex flex-col gap-2">
 		{#each nextVocab.definitions as definition, i}
-			<Definition {definition} index={i} />
+			<Definition {definition} index={i} {hideWord} />
 		{/each}
 	</div>
 </Container>

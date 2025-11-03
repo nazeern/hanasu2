@@ -27,7 +27,7 @@
 	</div>
 {:else}
 	<input
-		class='p-1 border border-border rounded-lg bg-neutral-100'
+		class='w-full p-1 border border-border rounded-lg bg-neutral-100'
 		bind:value
 		{name}
 		{id}

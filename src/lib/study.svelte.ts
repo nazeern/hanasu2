@@ -2,7 +2,7 @@ import logger from '$lib/logger';
 import type { Tables } from '../database.types';
 import type { DictEntry } from '$lib/dictionary.svelte';
 
-export type StudyState = 'idle' | 'submitting' | 'correct' | 'incorrect';
+export type StudyState = 'idle' | 'correct' | 'incorrect';
 
 export class Study {
 	items = $state<DictEntry[]>([]);

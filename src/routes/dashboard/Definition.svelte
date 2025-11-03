@@ -4,9 +4,10 @@
 	interface Props {
 		definition: Definition;
 		index: number;
+		hideWord?: boolean;
 	}
 
-	let { definition, index }: Props = $props();
+	let { definition, index, hideWord = false }: Props = $props();
 </script>
 
 <div class="w-full">
@@ -15,8 +16,10 @@
 		{definition.meanings}
 	</p>
 	<p class="w-fit bg-neutral-300 text-sm px-2 rounded-full mb-1">{definition.tags}</p>
-	<div class="ml-4 font-semibold italic text-neutral-600">
-		<p>{definition.example_en}</p>
-		<p>{definition.example_ja}</p>
-	</div>
+	{#if !hideWord}
+		<div class="ml-4 font-semibold italic text-neutral-600">
+			<p>{definition.example_en}</p>
+			<p>{definition.example_ja}</p>
+		</div>
+	{/if}
 </div>
