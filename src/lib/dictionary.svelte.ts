@@ -1,5 +1,6 @@
 import logger from '$lib/logger';
 import type { Tables } from '../database.types';
+import type { ParsedWord } from '../routes/chat/kuromoji-parser';
 
 export type Definition = {
 	tags: string[];
@@ -33,7 +34,7 @@ export class Dictionary {
 		this.langCode = langCode;
 	}
 
-	async lookupWord(sentence: string, tapIndex: number): Promise<void> {
+	async lookupWord(sentence: string, tapIndex: number, parsedWord?: ParsedWord): Promise<void> {
 		this.lookup = { loading: true };
 
 		try {
@@ -45,7 +46,8 @@ export class Dictionary {
 				body: JSON.stringify({
 					sentence,
 					tapIndex,
-					lang: this.langCode
+					lang: this.langCode,
+					parsedWord
 				})
 			});
 

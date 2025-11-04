@@ -1,31 +1,52 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { parseWordAtIndex } from '../kuromoji-parser';
+import { parseWordAtIndex, type ParsedWord } from '../kuromoji-parser';
 import { isString } from '$lib/util';
 import logger from '$lib/logger';
 
 export const POST: RequestHandler = async ({ request, locals: { safeGetSession, supabase } }) => {
 	const body = await request.json();
-	const { sentence, tapIndex, lang } = body;
+	const { sentence, tapIndex, lang, parsedWord: providedParsedWord } = body;
 
-	if (!isString(sentence) || typeof tapIndex !== 'number' || !isString(lang)) {
-		logger.warn('Invalid request: missing sentence, tapIndex, or lang');
+	if (!isString(lang)) {
+		logger.warn('Invalid request: missing lang');
 		return json({ error: 'Invalid request' }, { status: 400 });
-	}
-
-	if (isNaN(tapIndex)) {
-		logger.warn('Invalid tap index: not a number');
-		return json({ error: 'Invalid tap index' }, { status: 400 });
 	}
 
 	try {
 		const { user } = await safeGetSession();
-		const parsedWord = await parseWordAtIndex(sentence, tapIndex);
+		let parsedWord: ParsedWord | null;
+
+		// If parsedWord is provided, use it directly
+		if (providedParsedWord) {
+			logger.info(providedParsedWord, 'Using provided parsed word');
+			parsedWord = providedParsedWord;
+		} else {
+			// Fall back to parsing with sentence and tapIndex
+			if (!isString(sentence) || typeof tapIndex !== 'number') {
+				logger.warn('Invalid request: missing sentence or tapIndex');
+				return json({ error: 'Invalid request' }, { status: 400 });
+			}
+
+			if (isNaN(tapIndex)) {
+				logger.warn('Invalid tap index: not a number');
+				return json({ error: 'Invalid tap index' }, { status: 400 });
+			}
+
+			logger.info('Parsing word at index', { sentence, tapIndex });
+			parsedWord = await parseWordAtIndex(sentence, tapIndex);
+
+			if (!parsedWord) {
+				logger.warn(`No word found at tap position ${tapIndex}`);
+				return json({ error: 'No word found at tap position' }, { status: 404 });
+			}
+		}
 
 		if (!parsedWord) {
-			logger.warn(`No word found at tap position ${tapIndex}`);
-			return json({ error: 'No word found at tap position' }, { status: 404 });
+			logger.warn('No word parsed');
+			return json({ error: 'No word found' }, { status: 404 });
 		}
+
 		const { data: dictEntries, error: dictError } = await supabase
 			.from('ja_dict')
 			.select('*')

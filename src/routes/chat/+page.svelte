@@ -50,16 +50,9 @@
 	function handleTokenClick(msg: ChatMessage, token: ParsedWord): void {
 		if (!msg.tokens) return;
 
-		// Calculate character index by summing lengths of all tokens before this one
-		let charIndex = 0;
-		for (const t of msg.tokens) {
-			if (t.surfaceForm === token.surfaceForm) {
-				break;
-			}
-			charIndex += t.surfaceForm.length;
-		}
-
-		dictionary.lookupWord(msg.text, charIndex);
+		// Pass the token directly to avoid redundant tokenization on the server
+		// sentence and tapIndex are only used as fallback if needed
+		dictionary.lookupWord(msg.text, 0, token);
 	}
 </script>
 
