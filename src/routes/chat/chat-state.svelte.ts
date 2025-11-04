@@ -2,6 +2,7 @@ import logger from '$lib/logger';
 import { RealtimeAgent, RealtimeSession } from '@openai/agents-realtime';
 import { toChatMessage } from './utils';
 import { langInfoList, type LangInfo } from '$lib/constants';
+import type { ParsedWord } from './kuromoji-parser';
 
 export type ChatMessage = {
 	text: string;
@@ -12,6 +13,7 @@ export type ChatMessage = {
 	status: 'completed' | 'in_progress' | 'incomplete';
 	tips?: string;
 	tipsLoading: boolean;
+	tokens?: ParsedWord[];
 };
 
 interface ChatInterface {
@@ -81,6 +83,9 @@ export class Chat implements ChatInterface {
 				status: 'completed',
 				tipsLoading: false
 			});
+
+			// Tokenize test messages
+			this.messages.forEach((msg) => this.tokenizeMessage(msg));
 		}
 
 		this.session.on('history_updated', (items) => {
@@ -107,6 +112,7 @@ export class Chat implements ChatInterface {
 						this.messages.push(newMessage);
 					}
 					this.aiAssist(newMessage);
+					this.tokenizeMessage(newMessage);
 				});
 		});
 	}
@@ -216,6 +222,33 @@ export class Chat implements ChatInterface {
 			logger.error('AI assist failed');
 		} finally {
 			message.tipsLoading = false;
+		}
+	}
+
+	async tokenizeMessage(message: ChatMessage): Promise<void> {
+		if (message.status !== 'completed') return;
+		if (message.tokens !== undefined) return;
+
+		try {
+			const response = await fetch('/chat/tokenize', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({
+					text: message.text
+				})
+			});
+
+			if (!response.ok) {
+				logger.error('Tokenization API request failed');
+				return;
+			}
+
+			const result = await response.json();
+			message.tokens = result.tokens;
+		} catch (error) {
+			logger.error('Tokenization failed', error);
 		}
 	}
 

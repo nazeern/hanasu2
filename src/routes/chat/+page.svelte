@@ -2,8 +2,10 @@
 	import { onMount } from 'svelte';
 	import { Chat } from './chat-state.svelte';
 	import type { ChatMessage } from './chat-state.svelte';
+	import type { ParsedWord } from './kuromoji-parser';
 	import { Dictionary } from '$lib/dictionary.svelte';
 	import { createClickHandler } from '$lib/click-handler';
+	import TokenizedText from './TokenizedText.svelte';
 
 	let { data } = $props();
 
@@ -44,6 +46,21 @@
 			chat.translate(msg);
 		}
 	);
+
+	function handleTokenClick(msg: ChatMessage, token: ParsedWord): void {
+		if (!msg.tokens) return;
+
+		// Calculate character index by summing lengths of all tokens before this one
+		let charIndex = 0;
+		for (const t of msg.tokens) {
+			if (t.surfaceForm === token.surfaceForm) {
+				break;
+			}
+			charIndex += t.surfaceForm.length;
+		}
+
+		dictionary.lookupWord(msg.text, charIndex);
+	}
 </script>
 
 <p>CHAT PAGE</p>
@@ -67,9 +84,15 @@
 {#each chat.messages as msg (msg.id)}
 	<div>
 		<p>{msg.from}:</p>
-		<button onclick={(e) => handleSingleClick(e, msg)} ondblclick={() => handleDoubleClick(msg)}>
-			{msg.text}
-		</button>
+		{#if msg.tokens}
+			<button ondblclick={() => handleDoubleClick(msg)}>
+				<TokenizedText tokens={msg.tokens} onWordClick={(token) => handleTokenClick(msg, token)} />
+			</button>
+		{:else}
+			<button onclick={(e) => handleSingleClick(e, msg)} ondblclick={() => handleDoubleClick(msg)}>
+				{msg.text}
+			</button>
+		{/if}
 		<p>{msg.status}</p>
 		{#if msg.translationLoading}
 			<p>Translating...</p>

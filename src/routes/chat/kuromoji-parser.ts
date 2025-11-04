@@ -104,6 +104,32 @@ export async function parseWordAtIndex(
 }
 
 /**
+ * Tokenizes an entire sentence and returns all words with their linguistic information.
+ *
+ * @param sentence - The sentence to tokenize
+ * @returns Array of ParsedWord objects for each token in the sentence
+ */
+export async function tokenizeSentence(sentence: string): Promise<ParsedWord[]> {
+	try {
+		const tokenizer = await getTokenizer();
+		const tokens = tokenizer.tokenize(sentence);
+
+		logger.info(`Tokenizing full sentence: "${sentence}" - found ${tokens.length} tokens`);
+
+		return tokens.map((token) => ({
+			surfaceForm: token.surface_form,
+			baseForm: token.basic_form,
+			partOfSpeech: token.pos,
+			reading: token.reading,
+			pronunciation: token.pronunciation
+		}));
+	} catch (error) {
+		logger.error('Error tokenizing sentence', error);
+		throw error;
+	}
+}
+
+/**
  * Resets the tokenizer cache. Useful for testing or if dictionary needs to be reloaded.
  */
 export function resetTokenizer(): void {
