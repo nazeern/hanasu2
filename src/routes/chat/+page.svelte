@@ -1,16 +1,15 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { Chat } from './chat-state.svelte';
-	import type { ChatMessage } from './chat-state.svelte';
-	import type { ParsedWord } from './kuromoji-parser';
 	import { Dictionary } from '$lib/dictionary.svelte';
-	import { createClickHandler } from '$lib/click-handler';
-	import TokenizedText from './TokenizedText.svelte';
+	import ChatMessages from './ChatMessages.svelte';
+	import RecordButton from './RecordButton.svelte';
 
 	let { data } = $props();
 
 	const chat = new Chat(data.language, data.testMode, data.prompt);
 	const dictionary = new Dictionary(data.language);
+
 	onMount(() => {
 		chat.connect(data.ephemeralKey);
 
@@ -18,104 +17,34 @@
 			chat.close();
 		};
 	});
-
-	const { handleSingleClick, handleDoubleClick } = createClickHandler<ChatMessage>(
-		(e, msg) => {
-			const button = (e.target as HTMLElement).closest('button');
-			if (!button) return;
-
-			let textNode: Node | null = null;
-			let offset = 0;
-
-			const position = document.caretPositionFromPoint(e.clientX, e.clientY);
-			if (!position) return;
-			textNode = position.offsetNode;
-			offset = position.offset;
-
-			// Create a range from the start of the button to the click position
-			const fullRange = document.createRange();
-			fullRange.setStart(button, 0);
-			fullRange.setEnd(textNode, offset);
-
-			// The character index is simply the length of the text up to the click
-			const charIndex = fullRange.toString().length;
-
-			dictionary.lookupWord(msg.text, charIndex);
-		},
-		(msg) => {
-			chat.translate(msg);
-		}
-	);
-
-	function handleTokenClick(msg: ChatMessage, token: ParsedWord): void {
-		if (!msg.tokens) return;
-
-		// Pass the token directly to avoid redundant tokenization on the server
-		// sentence and tapIndex are only used as fallback if needed
-		dictionary.lookupWord(msg.text, 0, token);
-	}
 </script>
 
-<p>CHAT PAGE</p>
-<p>Connected: {chat.connected}</p>
+<div class="h-screen flex flex-col bg-gray-50">
+	<ChatMessages {chat} {dictionary} />
+	<RecordButton {chat} />
+</div>
 
-<button
-	onpointerdown={() => chat.startRecording()}
-	onpointerup={() => chat.stopRecording()}
-	onpointerleave={() => chat.stopRecording()}
-	disabled={!chat.connected}
->
-	{#if !chat.connected}
-		Connecting...
-	{:else if chat.recording}
-		🎤 Recording... (Release to send)
-	{:else}
-		🎤 Hold to Talk
-	{/if}
-</button>
-
-{#each chat.messages as msg (msg.id)}
-	<div>
-		<p>{msg.from}:</p>
-		{#if msg.tokens}
-			<button ondblclick={() => handleDoubleClick(msg)}>
-				<TokenizedText tokens={msg.tokens} onWordClick={(token) => handleTokenClick(msg, token)} />
-			</button>
-		{:else}
-			<button onclick={(e) => handleSingleClick(e, msg)} ondblclick={() => handleDoubleClick(msg)}>
-				{msg.text}
-			</button>
-		{/if}
-		<p>{msg.status}</p>
-		{#if msg.translationLoading}
-			<p>Translating...</p>
-		{/if}
-		{#if msg.translatedText}
-			<p>{msg.translatedText}</p>
-		{/if}
-		{#if msg.tips}
-			<p><strong>Tips:</strong> {msg.tips}</p>
-		{/if}
-	</div>
-{/each}
-
-{#if !dictionary.lookup}
-	{null}
-{:else if dictionary.lookup.loading}
+<!-- Dictionary UI - to be implemented later
+{#if dictionary.loading}
 	<p>Looking up word...</p>
-{:else if dictionary.lookup.word}
+{:else if dictionary.word}
 	<div>
-		<p><strong>Word:</strong> {dictionary.lookup.word}</p>
+		<p><strong>Word:</strong> {dictionary.word}</p>
 
-		{#if dictionary.lookup.entries && dictionary.lookup.entries.length}
-			<p><strong>Dictionary Entries ({dictionary.lookup.entries.length}):</strong></p>
-			{#each dictionary.lookup.entries as entry}
-				<div
-					style="margin-left: 20px; margin-bottom: 15px; border-left: 2px solid #ccc; padding-left: 10px;"
-				>
+		{#if dictionary.vocab.length}
+			<p><strong>Dictionary Entries ({dictionary.vocab.length}):</strong></p>
+			{#each dictionary.vocab as entry}
+				<div>
 					<p><strong>Headword:</strong> {entry.word}</p>
-					<button onclick={() => dictionary.toggleSave(entry.id)}>
-						{entry.vocabulary ? 'Remove from Vocabulary' : 'Save to Vocabulary'}
+					<button
+						onclick={() => dictionary.toggleSave(entry.id)}
+						disabled={dictionary.savingWordId === entry.id}
+					>
+						{#if dictionary.savingWordId === entry.id}
+							{entry.vocabulary ? 'Removing...' : 'Saving...'}
+						{:else}
+							{entry.vocabulary ? 'Remove from Vocabulary' : 'Save to Vocabulary'}
+						{/if}
 					</button>
 					{#if entry.readings.length}
 						<p><strong>Readings:</strong> {entry.readings.join(', ')}</p>
@@ -127,23 +56,23 @@
 					{#if entry.definitions.length}
 						<p><strong>Definitions:</strong></p>
 						{#each entry.definitions as def, i}
-							<div style="margin-left: 15px; margin-bottom: 10px;">
+							<div>
 								<p><strong>{i + 1}.</strong> {def.meanings.join('; ')}</p>
 								{#if def.parts_of_speech.length}
-									<p style="font-style: italic; color: #666;">({def.parts_of_speech.join(', ')})</p>
+									<p>({def.parts_of_speech.join(', ')})</p>
 								{/if}
 								{#if def.tags.length}
-									<p style="font-size: 0.9em; color: #888;">{def.tags.join(', ')}</p>
+									<p>{def.tags.join(', ')}</p>
 								{/if}
 								{#if def.example_ja}
 									<p><strong>Example:</strong></p>
-									<p style="margin-left: 10px;">🇯🇵 {def.example_ja}</p>
+									<p>🇯🇵 {def.example_ja}</p>
 									{#if def.example_en}
-										<p style="margin-left: 10px;">🇬🇧 {def.example_en}</p>
+										<p>🇬🇧 {def.example_en}</p>
 									{/if}
 								{/if}
 								{#if def.see_also}
-									<p style="font-size: 0.9em;">See also: {def.see_also}</p>
+									<p>See also: {def.see_also}</p>
 								{/if}
 							</div>
 						{/each}
@@ -155,3 +84,4 @@
 		{/if}
 	</div>
 {/if}
+-->
