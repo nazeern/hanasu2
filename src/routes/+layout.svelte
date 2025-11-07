@@ -23,8 +23,11 @@
 	<link rel="icon" href={favicon} />
 </svelte:head>
 
-{#if session}
-	<Navbar {...data} />
-{/if}
-
-{@render children?.()}
+<div class="h-screen flex flex-col">
+	{#if session}
+		<Navbar {...data} />
+	{/if}
+	<div class="flex-1">
+		{@render children?.()}
+	</div>
+</div>

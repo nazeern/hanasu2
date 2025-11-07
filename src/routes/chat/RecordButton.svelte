@@ -1,21 +1,27 @@
 <script lang="ts">
 	import type { Chat } from './chat-state.svelte';
+	import { cn } from '$lib/utils/cn';
 
 	interface Props {
 		chat: Chat;
 	}
 
 	let { chat }: Props = $props();
+
+	const buttonClass = $derived(
+		cn(
+			'w-20 h-20 rounded-full flex items-center justify-center text-2xl',
+			'transition-all duration-200 shadow-lg text-white font-semibold',
+			!chat.connected && 'bg-gray-400 cursor-not-allowed',
+			chat.recording && 'bg-red-500 hover:bg-red-600 scale-110',
+			chat.connected && !chat.recording && 'bg-blue-500 hover:bg-blue-600 hover:scale-105'
+		)
+	);
 </script>
 
 <div class="flex justify-center py-6">
 	<button
-		class={`
-			w-20 h-20 rounded-full flex items-center justify-center text-2xl font-semibold
-			transition-all duration-200 shadow-lg
-			${!chat.connected ? 'bg-gray-400 cursor-not-allowed' : chat.recording ? 'bg-red-500 hover:bg-red-600 scale-110' : 'bg-blue-500 hover:bg-blue-600 hover:scale-105'}
-			text-white
-		`}
+		class={buttonClass}
 		onpointerdown={() => chat.startRecording()}
 		onpointerup={() => chat.stopRecording()}
 		onpointerleave={() => chat.stopRecording()}
