@@ -32,6 +32,11 @@ export const load: PageServerLoad = async ({ parent, locals: { supabase, safeGet
 		throw redirect(303, '/login');
 	}
 
+	// Redirect to onboarding if user hasn't completed it yet
+	if (!profile.experienced?.includes('onboard')) {
+		throw redirect(303, '/onboarding');
+	}
+
 	const { data: vocab } = await supabase
 		.from('vocabulary')
 		.select('*')

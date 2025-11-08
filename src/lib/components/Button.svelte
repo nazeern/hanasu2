@@ -15,12 +15,12 @@
 </script>
 
 {#if href}
-	<a {href} class={cn('font-semibold px-2 py-1 rounded-lg', buttonVariants[variant], className)}>
+	<a {href} class={cn('font-semibold px-2 py-1 rounded-lg cursor-pointer', buttonVariants[variant], className)}>
 		{@render children?.()}
 	</a>
 {:else}
 	<button
-		class={cn('font-semibold px-2 py-1 rounded-lg', buttonVariants[variant], className)}
+		class={cn('font-semibold px-2 py-1 rounded-lg cursor-pointer', buttonVariants[variant], className)}
 		{...rest}
 	>
 		{@render children?.()}
