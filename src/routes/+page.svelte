@@ -26,7 +26,9 @@
 					<Button variant="secondary" class="text-lg px-8 py-3">Try Demo</Button>
 				</a>
 			</div>
-			<p class="text-sm text-text-muted mt-4">No credit card required • Get started in 30 seconds</p>
+			<p class="text-sm text-text-muted mt-4">
+				No credit card required • Get started in 30 seconds
+			</p>
 		</div>
 	</section>
 
@@ -54,9 +56,7 @@
 	<section id="demo" class="container mx-auto px-4 py-16 md:py-24">
 		<div class="max-w-5xl mx-auto">
 			<div class="text-center mb-12">
-				<h2 class="text-3xl md:text-4xl font-bold text-text-primary mb-4">
-					See How It Works
-				</h2>
+				<h2 class="text-3xl md:text-4xl font-bold text-text-primary mb-4">See How It Works</h2>
 				<p class="text-lg text-text-secondary max-w-2xl mx-auto">
 					Chat naturally, tap any word to see its meaning, and save vocabulary for later review.
 					It's that simple.
@@ -70,12 +70,10 @@
 	<section class="bg-neutral-50 py-16 md:py-24">
 		<div class="container mx-auto px-4">
 			<div class="text-center mb-12">
-				<h2 class="text-3xl md:text-4xl font-bold text-text-primary mb-4">
-					Your Learning Journey
-				</h2>
+				<h2 class="text-3xl md:text-4xl font-bold text-text-primary mb-4">Your Learning Journey</h2>
 				<p class="text-lg text-text-secondary">Master Japanese in three simple steps</p>
 			</div>
-			<div class="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12 max-w-5xl mx-auto">
+			<div class="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12 max-w-5xl mx-auto justify-items-center">
 				<HowItWorksStep
 					number={1}
 					title="Chat Naturally"
@@ -101,7 +99,9 @@
 			<h2 class="text-3xl md:text-4xl font-bold text-text-primary mb-4">
 				Everything You Need to Succeed
 			</h2>
-			<p class="text-lg text-text-secondary">Powerful features that make learning feel effortless</p>
+			<p class="text-lg text-text-secondary">
+				Powerful features that make learning feel effortless
+			</p>
 		</div>
 		<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
 			<FeatureCard
@@ -262,7 +262,9 @@
 	<!-- Footer -->
 	<footer class="border-t border-border py-8">
 		<div class="container mx-auto px-4">
-			<div class="flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-text-secondary">
+			<div
+				class="flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-text-secondary"
+			>
 				<div>© 2024 Hanasu. All rights reserved.</div>
 				<div class="flex gap-6">
 					<a href="/about" class="hover:text-primary-600 transition-colors">About</a>
