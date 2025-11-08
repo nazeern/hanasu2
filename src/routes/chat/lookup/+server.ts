@@ -4,9 +4,14 @@ import type { ParsedWord } from '../kuromoji-parser';
 import { isString } from '$lib/util';
 import logger from '$lib/logger';
 
+interface LookupRequestBody {
+	parsedWord: ParsedWord;
+	lang: string;
+}
+
 export const POST: RequestHandler = async ({ request, locals: { safeGetSession, supabase } }) => {
 	const body = await request.json();
-	const { parsedWord, lang } = body;
+	const { parsedWord, lang } = body as LookupRequestBody;
 
 	if (!isString(lang)) {
 		logger.warn('Invalid request: missing lang');
@@ -25,7 +30,7 @@ export const POST: RequestHandler = async ({ request, locals: { safeGetSession, 
 		const { data: dictEntries, error: dictError } = await supabase
 			.from('ja_dict')
 			.select('*')
-			.contains('readings', [parsedWord.surfaceForm]);
+			.contains('readings', [parsedWord.baseForm]);
 		if (dictError) {
 			logger.error('Dictionary query error', dictError);
 			return json({ error: 'Dictionary query failed' }, { status: 500 });

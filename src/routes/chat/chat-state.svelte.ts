@@ -96,23 +96,22 @@ export class Chat implements ChatInterface {
 					const incomingMessage = toChatMessage(item);
 					if (!incomingMessage) return;
 					let existingMessage = this.messages.findLast((msg) => msg.id === incomingMessage.id);
-					let newMessage: ChatMessage;
 					if (existingMessage) {
-						newMessage = {
-							...existingMessage,
-							...incomingMessage
-						};
-						existingMessage = newMessage;
+						// Mutate the existing message object to preserve reactivity
+						Object.assign(existingMessage, incomingMessage);
+						this.aiAssist(existingMessage);
+						this.tokenizeMessage(existingMessage);
 					} else {
-						newMessage = {
+						// Add new message
+						const newMessage: ChatMessage = {
 							...incomingMessage,
 							translationLoading: false,
 							tipsLoading: false
 						};
 						this.messages.push(newMessage);
+						this.aiAssist(newMessage);
+						this.tokenizeMessage(newMessage);
 					}
-					this.aiAssist(newMessage);
-					this.tokenizeMessage(newMessage);
 				});
 		});
 	}
