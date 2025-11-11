@@ -22,7 +22,7 @@
 				class="text-left w-full"
 				ondblclick={() => onDoubleClick(message)}
 			>
-				<TokenizedText tokens={message.tokens} onWordClick={onTokenClick} />
+				<TokenizedText tokens={message.tokens} onWordClick={onTokenClick} {isUser} />
 			</button>
 		{:else}
 			<p class="text-sm opacity-70 italic">Tokenizing...</p>
