@@ -4,11 +4,6 @@ import type { Actions, PageServerLoad } from './$types';
 export const load: PageServerLoad = async ({ parent }) => {
 	const { profile } = await parent();
 
-	// If user has already completed onboarding, redirect to dashboard
-	if (profile?.experienced?.includes('onboard')) {
-		throw redirect(303, '/dashboard');
-	}
-
 	return {};
 };
 

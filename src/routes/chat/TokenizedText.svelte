@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { ParsedWord } from './kuromoji-parser';
+	import { createClickHandler } from '$lib/click-handler';
 
 	interface Props {
 		tokens: ParsedWord[];
@@ -7,6 +8,12 @@
 	}
 
 	let { tokens, onWordClick }: Props = $props();
+
+	const { handleSingleClick, handleDoubleClick } = createClickHandler<ParsedWord>(
+		(_e, token) => onWordClick(token),
+		() => {}, // Do nothing on double-click, let event bubble to parent for translation
+		200
+	);
 </script>
 
 <span class="tokenized-text">
@@ -14,7 +21,8 @@
 		<button
 			type="button"
 			class="token"
-			onclick={() => onWordClick(token)}
+			onclick={(e) => handleSingleClick(e, token)}
+			ondblclick={() => handleDoubleClick(token)}
 		>
 			{token.surfaceForm}
 		</button>
