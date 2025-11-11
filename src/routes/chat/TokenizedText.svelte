@@ -16,11 +16,11 @@
 	);
 </script>
 
-<span class="tokenized-text">
+<span class="inline break-words leading-relaxed">
 	{#each tokens as token}
 		<button
 			type="button"
-			class="token"
+			class="inline-block px-1 py-0.5 mx-px rounded bg-neutral-300/30 border-b-2 border-transparent cursor-pointer transition-all duration-200 hover:bg-white/40 hover:border-white/80 hover:-translate-y-px active:translate-y-0"
 			onclick={(e) => handleSingleClick(e, token)}
 			ondblclick={() => handleDoubleClick(token)}
 		>
@@ -28,36 +28,3 @@
 		</button>
 	{/each}
 </span>
-
-<style>
-	.tokenized-text {
-		display: inline;
-		word-wrap: break-word;
-		line-height: 1.8;
-	}
-
-	.token {
-		display: inline-block;
-		border: none;
-		background: rgba(59, 130, 246, 0.1);
-		padding: 2px 4px;
-		margin: 0 1px;
-		border-radius: 4px;
-		font: inherit;
-		color: inherit;
-		text-align: inherit;
-		cursor: pointer;
-		transition: all 0.2s ease;
-		border-bottom: 2px solid transparent;
-	}
-
-	.token:hover {
-		background: rgba(59, 130, 246, 0.2);
-		border-bottom-color: rgb(59, 130, 246);
-		transform: translateY(-1px);
-	}
-
-	.token:active {
-		transform: translateY(0);
-	}
-</style>
