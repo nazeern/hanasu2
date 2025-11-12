@@ -19,7 +19,7 @@
 	<div class={cn('max-w-2xl px-4 py-2 rounded-2xl', isUser ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-900')}>
 		{#if message.tokens}
 			<button
-				class="text-left w-full"
+				class="text-left w-full touch-manipulation"
 				ondblclick={() => onDoubleClick(message)}
 			>
 				<TokenizedText tokens={message.tokens} onWordClick={onTokenClick} {isUser} />
