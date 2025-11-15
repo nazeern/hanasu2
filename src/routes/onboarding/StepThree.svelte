@@ -17,7 +17,9 @@
 
 	let { onback, selectedProficiency }: Props = $props();
 
-	const chat = new Chat('ja', true, '');
+	// Generate temporary session ID for onboarding demo
+	const tempSessionId = crypto.randomUUID();
+	const chat = new Chat('ja', true, '', tempSessionId);
 	const dictionary = new Dictionary('ja');
 	let showHint = $state(true);
 	let isSubmitting = $state(false);

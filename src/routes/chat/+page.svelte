@@ -8,13 +8,18 @@
 
 	let { data } = $props();
 
-	const chat = new Chat(data.language, data.testMode, data.prompt);
+	const chat = new Chat(data.language, data.testMode, data.prompt, data.sessionId);
 	const dictionary = new Dictionary(data.language);
 
 	onMount(() => {
 		chat.connect(data.ephemeralKey);
 
+		// Backup: save session if user closes browser unexpectedly
+		window.addEventListener('beforeunload', chat.saveSession);
+
 		return () => {
+			// Clean up beforeunload listener
+			window.removeEventListener('beforeunload', chat.saveSession);
 			chat.close();
 		};
 	});

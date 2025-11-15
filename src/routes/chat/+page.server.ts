@@ -3,6 +3,7 @@ import type { PageServerLoad } from './$types';
 import { OPENAI_SECRET_KEY } from '$env/static/private';
 import { isString } from '$lib/util';
 import { dev } from '$app/environment';
+import { randomUUID } from 'crypto';
 
 export type SvelteFetch = Parameters<PageServerLoad>[0]['fetch'];
 
@@ -26,6 +27,7 @@ export const load: PageServerLoad = async ({
 	]);
 
 	return {
+		sessionId: randomUUID(),
 		ephemeralKey: testMode ? undefined : ephemeralKey,
 		language: profile?.lang ?? 'ja',
 		testMode: testMode,

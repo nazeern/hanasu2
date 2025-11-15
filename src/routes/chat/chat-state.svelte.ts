@@ -28,10 +28,15 @@ interface ChatInterface {
 	aiAssist(message: ChatMessage): Promise<void>;
 	startRecording(): void;
 	stopRecording(): void;
+	saveSession(): Promise<void>;
 }
 
 export class Chat implements ChatInterface {
 	private session: RealtimeSession;
+	private sessionId: string;
+	private sessionStartTime: number;
+	private lastUserMessageStartTime?: number;
+	private avgResponseDurationMs?: number;
 
 	prompt: string;
 	langInfo: LangInfo;
@@ -39,7 +44,9 @@ export class Chat implements ChatInterface {
 	messages = $state<ChatMessage[]>([]);
 	recording = $state<boolean>(false);
 
-	constructor(langCode: string, testMode: boolean, prompt: string) {
+	constructor(langCode: string, testMode: boolean, prompt: string, sessionId: string) {
+		this.sessionId = sessionId;
+		this.sessionStartTime = Date.now();
 		this.prompt = prompt;
 		this.langInfo = langInfoList.find((lang) => lang.code === langCode) || langInfoList[0];
 
@@ -154,6 +161,8 @@ export class Chat implements ChatInterface {
 		if (!this.connected) {
 			return;
 		}
+		// Save session before closing
+		this.saveSession();
 		this.session.close();
 	}
 
@@ -254,10 +263,47 @@ export class Chat implements ChatInterface {
 	startRecording(): void {
 		this.recording = true;
 		this.session.mute(false);
+		this.lastUserMessageStartTime = Date.now();
 	}
 
 	stopRecording(): void {
 		this.session.mute(true);
 		this.recording = false;
+
+		// Update average response time
+		if (this.lastUserMessageStartTime) {
+			const responseTime = Date.now() - this.lastUserMessageStartTime;
+			const n = Math.floor(this.messages.length / 2) + 1
+			this.avgResponseDurationMs = (n * (this.avgResponseDurationMs ?? responseTime) + responseTime) / (n + 1);
+		}
+	}
+
+	async saveSession(): Promise<void> {
+		// Don't save if we never connected
+		if (!this.connected) {
+			return;
+		}
+
+		try {
+			const duration = Date.now() - this.sessionStartTime;
+
+			await fetch('/chat/session', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({
+					sessionId: this.sessionId,
+					lang: this.langInfo.code,
+					topic: this.prompt,
+					duration: duration,
+					nResponses: this.messages.length,
+					avgResponseDurationMs: this.avgResponseDurationMs,
+				})
+			});
+		} catch (error) {
+			// just log error, shouldn't be user facing
+			logger.error('Failed to save session', error);
+		}
 	}
 }
