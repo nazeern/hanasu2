@@ -6,7 +6,7 @@ interface SaveSessionRequest {
 	sessionId: string;
 	lang: string;
 	topic: string;
-	duration: number;
+	duration: number; // in milliseconds (will be converted to seconds for database)
 	nResponses: number;
 	avgResponseDurationMs?: number;
 }
@@ -37,6 +37,9 @@ export const POST: RequestHandler = async ({ request, locals: { safeGetSession, 
 
 	const { sessionId, lang, topic, duration, nResponses, avgResponseDurationMs } = body;
 
+	// Convert duration from milliseconds to seconds, round, and cap at 10000 seconds (~2.7 hours)
+	const processedDuration = Math.min(Math.round(duration / 1000), 10000);
+
 	// Round and cap avg_response_duration_ms at database maximum (10000)
 	const processedAvgResponseDuration = avgResponseDurationMs != null
 		? Math.min(Math.round(avgResponseDurationMs), 10000)
@@ -49,7 +52,7 @@ export const POST: RequestHandler = async ({ request, locals: { safeGetSession, 
 			user_id: user.id,
 			lang,
 			topic,
-			duration,
+			duration: processedDuration,
 			n_responses: nResponses,
 			avg_response_duration_ms: processedAvgResponseDuration,
 			chat_messages: null,
@@ -61,6 +64,7 @@ export const POST: RequestHandler = async ({ request, locals: { safeGetSession, 
 			return error(500, { message: 'Failed to save session' });
 		}
 
+		logger.info('Session save successful')
 		return json({ success: true });
 	} catch (err) {
 		logger.error({ error: err }, 'Session save error');

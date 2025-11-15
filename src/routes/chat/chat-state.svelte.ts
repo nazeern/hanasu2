@@ -3,6 +3,7 @@ import { RealtimeAgent, RealtimeSession } from '@openai/agents-realtime';
 import { toChatMessage } from './utils';
 import { langInfoList, type LangInfo } from '$lib/constants';
 import type { ParsedWord } from './kuromoji-parser';
+import { getAgentInstructions } from './constants';
 
 export type ChatMessage = {
 	text: string;
@@ -54,11 +55,8 @@ export class Chat implements ChatInterface {
 
 		const agent = new RealtimeAgent({
 			name: 'Assistant',
-			instructions: 'You are a helpful assistant.'
+			instructions: getAgentInstructions(proficiency)
 		});
-
-		// Calculate speech speed based on proficiency
-		const speed = proficiency === 'beginner' ? 0.75 : proficiency === 'intermediate' ? 0.95 : 1.0;
 
 		const session = new RealtimeSession(agent, {
 			model: 'gpt-realtime',
@@ -70,9 +68,6 @@ export class Chat implements ChatInterface {
 						}
 						// NO turnDetection config - this means NO automatic turn detection at all
 						// We will manually commit audio and create responses
-					},
-					output: {
-						speed: speed
 					}
 				}
 			}
