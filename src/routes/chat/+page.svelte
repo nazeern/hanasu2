@@ -14,12 +14,15 @@
 	onMount(() => {
 		chat.connect(data.ephemeralKey);
 
-		// Backup: save session if user closes browser unexpectedly
-		window.addEventListener('beforeunload', chat.saveSession);
+		// Backup: save session when page becomes hidden (tab closed, switched, etc.)
+		// More reliable than beforeunload, especially on mobile
+		const handleVisibilityChange = () => {
+			if (document.visibilityState === 'hidden') chat.saveSession(true);
+		};
+		document.addEventListener('visibilitychange', handleVisibilityChange);
 
 		return () => {
-			// Clean up beforeunload listener
-			window.removeEventListener('beforeunload', chat.saveSession);
+			document.removeEventListener('visibilitychange', handleVisibilityChange);
 			chat.close();
 		};
 	});

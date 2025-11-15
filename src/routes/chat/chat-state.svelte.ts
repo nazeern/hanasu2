@@ -278,7 +278,7 @@ export class Chat implements ChatInterface {
 		}
 	}
 
-	async saveSession(): Promise<void> {
+	async saveSession(useBeacon: boolean = false): Promise<void> {
 		// Don't save if we never connected
 		if (!this.connected) {
 			return;
@@ -286,21 +286,31 @@ export class Chat implements ChatInterface {
 
 		try {
 			const duration = Date.now() - this.sessionStartTime;
+			const sessionData = {
+				sessionId: this.sessionId,
+				lang: this.langInfo.code,
+				topic: this.prompt,
+				duration: duration,
+				nResponses: this.messages.length,
+				avgResponseDurationMs: this.avgResponseDurationMs
+			};
 
-			await fetch('/chat/session', {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json'
-				},
-				body: JSON.stringify({
-					sessionId: this.sessionId,
-					lang: this.langInfo.code,
-					topic: this.prompt,
-					duration: duration,
-					nResponses: this.messages.length,
-					avgResponseDurationMs: this.avgResponseDurationMs,
-				})
-			});
+			if (useBeacon && navigator.sendBeacon) {
+				// Use sendBeacon for reliable delivery during page unload
+				const blob = new Blob([JSON.stringify(sessionData)], {
+					type: 'application/json'
+				});
+				navigator.sendBeacon('/chat/session', blob);
+			} else {
+				// Use fetch for normal saves
+				await fetch('/chat/session', {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json'
+					},
+					body: JSON.stringify(sessionData)
+				});
+			}
 		} catch (error) {
 			// just log error, shouldn't be user facing
 			logger.error('Failed to save session', error);
