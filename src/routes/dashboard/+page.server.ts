@@ -127,11 +127,6 @@ export const load: PageServerLoad = async ({ parent, locals: { supabase, safeGet
 	const sessionDates = sessionDatesResult.data?.map((s) => s.created_at) || [];
 	const currentStreak = calculateDailyStreak(sessionDates);
 
-	logger.info(wordsSaved)
-	logger.info(currentStreak)
-	logger.info(totalConversationTime)
-
-
 	return {
 		email: session.user.email,
 		profile: profile,
