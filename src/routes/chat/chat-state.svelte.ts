@@ -44,17 +44,22 @@ export class Chat implements ChatInterface {
 	messages = $state<ChatMessage[]>([]);
 	recording = $state<boolean>(false);
 
-	constructor(langCode: string, testMode: boolean, prompt: string, sessionId: string) {
+	constructor(langCode: string, testMode: boolean, prompt: string, sessionId: string, proficiency: string = 'advanced') {
 		this.sessionId = sessionId;
 		this.sessionStartTime = Date.now();
 		this.prompt = prompt;
 		this.langInfo = langInfoList.find((lang) => lang.code === langCode) || langInfoList[0];
 
 		this.connected = false;
+
 		const agent = new RealtimeAgent({
 			name: 'Assistant',
 			instructions: 'You are a helpful assistant.'
 		});
+
+		// Calculate speech speed based on proficiency
+		const speed = proficiency === 'beginner' ? 0.75 : proficiency === 'intermediate' ? 0.95 : 1.0;
+
 		const session = new RealtimeSession(agent, {
 			model: 'gpt-realtime',
 			config: {
@@ -65,6 +70,9 @@ export class Chat implements ChatInterface {
 						}
 						// NO turnDetection config - this means NO automatic turn detection at all
 						// We will manually commit audio and create responses
+					},
+					output: {
+						speed: speed
 					}
 				}
 			}

@@ -20,16 +20,15 @@ export const load: PageServerLoad = async ({
 		redirect(303, '/login');
 	}
 
-	const getProfileLangStmt = supabase.from('profiles').select('lang').eq('id', user.id).single();
-	const [ephemeralKey, { data: profile }] = await Promise.all([
-		generateEphemeralKey(fetch),
-		getProfileLangStmt
-	]);
+	const getProfileStmt = supabase.from('profiles').select('lang, proficiency').eq('id', user.id).single();
+	const { data: profile } = await getProfileStmt;
+	const ephemeralKey = await generateEphemeralKey(fetch);
 
 	return {
 		sessionId: randomUUID(),
 		ephemeralKey: testMode ? undefined : ephemeralKey,
 		language: profile?.lang ?? 'ja',
+		proficiency: profile?.proficiency ?? 'advanced',
 		testMode: testMode,
 		prompt: prompt ?? 'How was your day today?'
 	};

@@ -8,7 +8,7 @@
 
 	let { data } = $props();
 
-	const chat = new Chat(data.language, data.testMode, data.prompt, data.sessionId);
+	const chat = new Chat(data.language, data.testMode, data.prompt, data.sessionId, data.proficiency);
 	const dictionary = new Dictionary(data.language);
 
 	onMount(() => {
