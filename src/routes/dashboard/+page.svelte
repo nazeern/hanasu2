@@ -3,7 +3,7 @@
 	import Message from '$lib/components/Message.svelte';
 	import Link from './Link.svelte';
 	import Vocab from './Vocab.svelte';
-	import MetricCard from './MetricCard.svelte';
+	import Metrics from './Metrics.svelte';
 
 	let { data, form } = $props();
 	let { prompts, nextVocab, metrics } = $derived(data);
@@ -11,27 +11,7 @@
 
 <div class="mx-auto w-full max-w-2xl flex flex-col items-center my-24 px-4">
 	<!-- Metrics Section -->
-	<Message text="YOUR PROGRESS" class="mb-6 font-light text-2xl" />
-	<div class="w-full flex flex-col gap-4 mb-8">
-		<MetricCard
-			label="Words Saved"
-			current={metrics.wordsSaved.current}
-			goal={metrics.wordsSaved.goal}
-			unit="words"
-		/>
-		<MetricCard
-			label="Conversation Time"
-			current={metrics.conversationTime.current}
-			goal={metrics.conversationTime.goal}
-			unit="min"
-		/>
-		<MetricCard
-			label="Daily Streak"
-			current={metrics.dailyStreak.current}
-			goal={metrics.dailyStreak.goal}
-			unit="days"
-		/>
-	</div>
+	<Metrics {metrics} />
 
 	<Divider class="m-8" />
 

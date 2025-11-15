@@ -15,10 +15,10 @@
 	const progressRounded = $derived(Math.round(progress));
 </script>
 
-<Container class="w-full flex flex-col gap-3">
+<Container class="w-full flex flex-col gap-2 py-3">
 	<!-- Metric label and values -->
 	<div class="flex justify-between items-baseline">
-		<h3 class="text-lg font-medium text-gray-900">{label}</h3>
+		<h3 class="text-base font-medium text-gray-900">{label}</h3>
 		<p class="text-sm text-gray-600">
 			<span class="font-semibold text-gray-900">{current}</span>
 			<span class="mx-1">/</span>
@@ -28,7 +28,7 @@
 	</div>
 
 	<!-- Progress bar -->
-	<div class="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+	<div class="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden">
 		<div
 			class="bg-primary-500 h-full rounded-full transition-all duration-500 ease-out"
 			style="width: {progress}%"
