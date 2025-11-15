@@ -3,18 +3,47 @@
 	import Message from '$lib/components/Message.svelte';
 	import Link from './Link.svelte';
 	import Vocab from './Vocab.svelte';
+	import MetricCard from './MetricCard.svelte';
 
 	let { data, form } = $props();
-	let { email, profile, prompts, nextVocab } = $derived(data);
+	let { prompts, nextVocab, metrics } = $derived(data);
 </script>
 
 <div class="mx-auto w-full max-w-2xl flex flex-col items-center my-24 px-4">
+	<!-- Metrics Section -->
+	<Message text="YOUR PROGRESS" class="mb-6 font-light text-2xl" />
+	<div class="w-full flex flex-col gap-4 mb-8">
+		<MetricCard
+			label="Words Saved"
+			current={metrics.wordsSaved.current}
+			goal={metrics.wordsSaved.goal}
+			unit="words"
+		/>
+		<MetricCard
+			label="Conversation Time"
+			current={metrics.conversationTime.current}
+			goal={metrics.conversationTime.goal}
+			unit="min"
+		/>
+		<MetricCard
+			label="Daily Streak"
+			current={metrics.dailyStreak.current}
+			goal={metrics.dailyStreak.goal}
+			unit="days"
+		/>
+	</div>
+
+	<Divider class="m-8" />
+
+	<!-- Conversation Prompts Section -->
 	<Message text="START A CONVERSATION" class="mb-4 font-light text-2xl" />
 	{#each prompts as prompt}
 		<Link route='/chat?prompt={encodeURIComponent(prompt)}'>
 			{prompt}
 		</Link>
 	{/each}
+
+	<!-- Vocab Section -->
 	{#if nextVocab}
 		<Divider class="m-8" />
 		<Message text="STUDY VOCAB" class="mb-4 font-light text-2xl" />
