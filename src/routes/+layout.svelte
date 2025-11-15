@@ -4,6 +4,7 @@
 	import { invalidate } from '$app/navigation';
 	import { onMount } from 'svelte';
 	import Navbar from '$lib/components/Navbar.svelte';
+	import UnauthNavbar from '$lib/components/UnauthNavbar.svelte';
 
 	let { data, children } = $props();
 	let { supabase, session } = $derived(data);
@@ -26,6 +27,8 @@
 <div class="h-screen flex flex-col">
 	{#if session}
 		<Navbar {...data} />
+	{:else}
+		<UnauthNavbar />
 	{/if}
 	<div class="flex-1">
 		{@render children?.()}

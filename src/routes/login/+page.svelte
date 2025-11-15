@@ -11,7 +11,7 @@
 	<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 </svelte:head>
 
-<div class='flex items-center justify-center w-full h-screen'>
+<div class='flex items-center justify-center w-full h-full'>
 	<div class="w-96 flex flex-col items-center gap-4">
 		<Welcome />
 		<OAuth />

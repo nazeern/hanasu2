@@ -1,8 +1,5 @@
 <script lang="ts">
-	import { enhance } from '$app/forms';
-	import { PUBLIC_TURNSTILE_SITEKEY } from '$env/static/public';
 	import type { SubmitFunction } from '@sveltejs/kit';
-	import { langInfoList } from '$lib/constants';
 	import Welcome from './Welcome.svelte';
 	import OAuth from './OAuth.svelte';
 	import Divider from '$lib/components/Divider.svelte';
@@ -23,7 +20,7 @@
 	<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 </svelte:head>
 
-<div class="flex items-center justify-center w-full h-screen">
+<div class="flex items-center justify-center w-full h-full">
 	<div class="w-96 flex flex-col items-center gap-4">
 		<Welcome />
 		<OAuth />
