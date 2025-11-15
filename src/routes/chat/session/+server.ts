@@ -37,6 +37,11 @@ export const POST: RequestHandler = async ({ request, locals: { safeGetSession, 
 
 	const { sessionId, lang, topic, duration, nResponses, avgResponseDurationMs } = body;
 
+	// Round and cap avg_response_duration_ms at database maximum (10000)
+	const processedAvgResponseDuration = avgResponseDurationMs != null
+		? Math.min(Math.round(avgResponseDurationMs), 10000)
+		: null;
+
 	try {
 		// Insert session into database
 		const { error: dbError } = await supabase.from('sessions').insert({
@@ -46,7 +51,7 @@ export const POST: RequestHandler = async ({ request, locals: { safeGetSession, 
 			topic,
 			duration,
 			n_responses: nResponses,
-			avg_response_duration_ms: avgResponseDurationMs ?? null,
+			avg_response_duration_ms: processedAvgResponseDuration,
 			chat_messages: null,
 			token_usage: null
 		});
