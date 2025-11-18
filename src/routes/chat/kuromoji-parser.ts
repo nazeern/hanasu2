@@ -29,7 +29,7 @@ function getTokenizer(): Promise<Tokenizer<IpadicFeatures>> {
 	tokenizerPromise = new Promise((resolve, reject) => {
 		// In development, use node_modules path; in production, use static/dict
 		const dicPath = process.env.NODE_ENV === 'production'
-			? '/dict'
+			? 'static/dict'
 			: 'node_modules/kuromoji/dict';
 
 		logger.info(`Initializing kuromoji tokenizer with dicPath: ${dicPath}`);
