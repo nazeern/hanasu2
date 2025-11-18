@@ -1,4 +1,4 @@
-import { browser } from '$app/environment';
+import { browser, dev } from '$app/environment';
 import pino, { type Logger } from 'pino';
 
 // Define a universal logger interface
@@ -20,13 +20,15 @@ if (browser) {
 		debug: (...args: any[]) => console.debug(...args)
 	};
 } else {
-	// Server: use pino with pino-pretty
+	// Server: use pino with pretty formatting in dev, JSON in production
 	logger = pino({
-		level: 'debug',
-		transport: {
-			target: 'pino-pretty',
-			options: { colorize: true }
-		}
+		level: dev ? 'debug' : 'info',
+		...(dev && {
+			transport: {
+				target: 'pino-pretty',
+				options: { colorize: true }
+			}
+		})
 	});
 }
 
