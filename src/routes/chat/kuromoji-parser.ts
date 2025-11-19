@@ -3,7 +3,7 @@ import type { IpadicFeatures, Tokenizer } from 'kuromoji';
 import logger from '$lib/logger';
 import { dev } from '$app/environment';
 import { join } from 'path';
-import { existsSync, readdirSync, statSync } from 'fs';
+import { ensureFilesIncluded } from '$lib/util';
 
 export type ParsedWord = {
 	surfaceForm: string;
@@ -31,85 +31,18 @@ function getTokenizer(): Promise<Tokenizer<IpadicFeatures>> {
 
 	tokenizerPromise = new Promise((resolve, reject) => {
 		// Use absolute path to node_modules/kuromoji/dict
-		// Vercel's Node File Trace will bundle these files automatically
 		const dicPath = dev
 			? 'node_modules/kuromoji/dict'
 			: join(process.cwd(), 'node_modules/kuromoji/dict');
 
-		// Comprehensive logging for debugging
-		logger.info('=== Kuromoji Initialization Debug Info ===');
-		logger.info({
-			environment: dev ? 'development' : 'production',
-			dicPath,
-			cwd: process.cwd(),
-			platform: process.platform,
-			nodeVersion: process.version
-		});
+		// Signal to Node File Trace that dictionary files need to be bundled
+		ensureFilesIncluded(dicPath);
 
-		// Check if path exists
-		const pathExists = existsSync(dicPath);
-		logger.info({ dicPath, pathExists });
-
-		if (pathExists) {
-			try {
-				const files = readdirSync(dicPath);
-				logger.info({ dicPath, fileCount: files.length, files });
-
-				// Log file sizes
-				const fileDetails = files.map((file) => {
-					try {
-						const filePath = join(dicPath, file);
-						const stats = statSync(filePath);
-						return { file, size: stats.size, isFile: stats.isFile() };
-					} catch (err) {
-						return { file, error: String(err) };
-					}
-				});
-				logger.info({ dicPath, fileDetails });
-			} catch (err) {
-				logger.error('Failed to read dicPath directory', {
-					dicPath,
-					error: err instanceof Error ? err.message : String(err),
-					stack: err instanceof Error ? err.stack : undefined
-				});
-			}
-		} else {
-			logger.error('Dictionary path does not exist', { dicPath });
-
-			// Try to find where kuromoji might be installed
-			const possiblePaths = [
-				join(process.cwd(), 'node_modules', 'kuromoji', 'dict'),
-				join(process.cwd(), '.svelte-kit', 'output', 'server', 'node_modules', 'kuromoji', 'dict'),
-				'node_modules/kuromoji/dict',
-				'/var/task/node_modules/kuromoji/dict'
-			];
-
-			logger.info('Checking possible dictionary locations:');
-			possiblePaths.forEach((path) => {
-				const exists = existsSync(path);
-				logger.info({ path, exists });
-				if (exists) {
-					try {
-						const files = readdirSync(path);
-						logger.info({ path, fileCount: files.length });
-					} catch (err) {
-						logger.error({ path, error: String(err) });
-					}
-				}
-			});
-		}
-
-		logger.info(`Attempting to build kuromoji tokenizer with dicPath: ${dicPath}`);
+		logger.info(`Initializing kuromoji tokenizer with dicPath: ${dicPath}`);
 
 		kuromoji.builder({ dicPath }).build((err, tokenizer) => {
 			if (err || !tokenizer) {
-				logger.error('Failed to initialize kuromoji tokenizer', {
-					dicPath,
-					errorMessage: err instanceof Error ? err.message : String(err),
-					errorStack: err instanceof Error ? err.stack : undefined,
-					errorType: err ? err.constructor.name : 'unknown',
-					fullError: err
-				});
+				logger.error('Failed to initialize kuromoji tokenizer', err);
 				tokenizerPromise = null;
 				reject(err || new Error('Tokenizer initialization failed'));
 				return;
@@ -137,9 +70,7 @@ export async function parseWordAtIndex(
 	charIndex: number
 ): Promise<ParsedWord | null> {
 	try {
-		logger.info('parseWordAtIndex called', { sentence, charIndex });
 		const tokenizer = await getTokenizer();
-		logger.info('Tokenizer retrieved successfully');
 		const tokens = tokenizer.tokenize(sentence);
 
 		logger.info(`Tokenizing sentence: "${sentence}" at index ${charIndex}`);
@@ -173,13 +104,7 @@ export async function parseWordAtIndex(
 		logger.warn(`No word found at index ${charIndex} in sentence "${sentence}"`);
 		return null;
 	} catch (error) {
-		logger.error('Error parsing word', {
-			sentence,
-			charIndex,
-			errorMessage: error instanceof Error ? error.message : String(error),
-			errorStack: error instanceof Error ? error.stack : undefined,
-			errorType: error ? error.constructor.name : 'unknown'
-		});
+		logger.error('Error parsing word', error);
 		throw error;
 	}
 }
@@ -192,9 +117,7 @@ export async function parseWordAtIndex(
  */
 export async function tokenizeSentence(sentence: string): Promise<ParsedWord[]> {
 	try {
-		logger.info('tokenizeSentence called', { sentence });
 		const tokenizer = await getTokenizer();
-		logger.info('Tokenizer retrieved successfully');
 		const tokens = tokenizer.tokenize(sentence);
 
 		logger.info(`Tokenizing full sentence: "${sentence}" - found ${tokens.length} tokens`);
@@ -207,12 +130,7 @@ export async function tokenizeSentence(sentence: string): Promise<ParsedWord[]> 
 			pronunciation: token.pronunciation
 		}));
 	} catch (error) {
-		logger.error('Error tokenizing sentence', {
-			sentence,
-			errorMessage: error instanceof Error ? error.message : String(error),
-			errorStack: error instanceof Error ? error.stack : undefined,
-			errorType: error ? error.constructor.name : 'unknown'
-		});
+		logger.error('Error tokenizing sentence', error);
 		throw error;
 	}
 }
