@@ -1,6 +1,8 @@
 import kuromoji from 'kuromoji';
 import type { IpadicFeatures, Tokenizer } from 'kuromoji';
 import logger from '$lib/logger';
+import { dev } from '$app/environment';
+import { join } from 'path';
 
 export type ParsedWord = {
 	surfaceForm: string;
@@ -27,10 +29,11 @@ function getTokenizer(): Promise<Tokenizer<IpadicFeatures>> {
 	}
 
 	tokenizerPromise = new Promise((resolve, reject) => {
-		// In development, use node_modules path; in production, use static/dict
-		const dicPath = process.env.NODE_ENV === 'production'
-			? 'static/dict'
-			: 'node_modules/kuromoji/dict';
+		// Use absolute path to node_modules/kuromoji/dict
+		// Vercel's Node File Trace will bundle these files automatically
+		const dicPath = dev
+			? 'node_modules/kuromoji/dict'
+			: join(process.cwd(), 'node_modules/kuromoji/dict');
 
 		logger.info(`Initializing kuromoji tokenizer with dicPath: ${dicPath}`);
 
