@@ -1,3 +1,5 @@
+import { dev } from '$app/environment';
+
 export interface LangInfo {
 	code: string;
 	displayName: string;
@@ -11,6 +13,10 @@ export const langInfoList: LangInfo[] = [
 		emoji: '🇯🇵'
 	},
 ];
+
+export const POLAR_CHECKOUT_URL = dev
+	? 'https://sandbox-api.polar.sh/v1/checkout-links/polar_cl_uGE7vdiADuJ2AFuVtfahEArHTwDBt0GYDKRGA3o634o/redirect'
+	: 'https://buy.polar.sh/polar_cl_6TwYs4yszHRh7GNhw55nsxyQ3lN67K988TT5h2DZKQB';
 
 export interface TagInfo {
 	code: string;

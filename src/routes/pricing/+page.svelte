@@ -1,6 +1,12 @@
 <script lang="ts">
 	import PricingCard from '$lib/components/pricing/PricingCard.svelte';
 	import Button from '$lib/components/Button.svelte';
+	import { POLAR_CHECKOUT_URL } from '$lib/constants';
+
+	let { data } = $props();
+
+	const checkoutUrl = new URL(POLAR_CHECKOUT_URL);
+	checkoutUrl.searchParams.set('customer_email', data.userEmail);
 
 	const freePlanFeatures = [
 		'15 conversations per month',
@@ -104,7 +110,7 @@
 					billingPeriod="per month"
 					features={premiumFeatures}
 					ctaText="Start Free Trial"
-					ctaHref="/signup?plan=monthly"
+					ctaHref={checkoutUrl.toString()}
 					highlighted={true}
 					badge="Most Popular"
 					badgeColor="primary"
@@ -117,10 +123,10 @@
 					billingPeriod="per year"
 					features={premiumFeatures}
 					ctaText="Start Free Trial"
-					ctaHref="/signup?plan=yearly"
+					ctaHref={checkoutUrl.toString()}
 					badge="Best Value"
 					badgeColor="success"
-					savingsText="Save $54/year (57% off)"
+					savingsText="Save $53.89/year (64% off)"
 				/>
 			</div>
 
@@ -288,7 +294,7 @@
 					</h3>
 					<p class="text-text-secondary">
 						Yes! You can upgrade from Free to Premium anytime. If you're on Monthly Premium, you can
-						switch to Yearly to save 57%. Downgrades take effect at the end of your current billing
+						switch to Yearly to save 64%. Downgrades take effect at the end of your current billing
 						period.
 					</p>
 				</div>
@@ -299,7 +305,7 @@
 					</h3>
 					<p class="text-text-secondary">
 						We accept all major credit cards (Visa, Mastercard, American Express, Discover) and debit
-						cards. All payments are securely processed through Stripe.
+						cards. All payments are securely processed through Polar.
 					</p>
 				</div>
 
