@@ -23,9 +23,10 @@ const dictFiles = [
 ];
 
 // Call read() at module level for static analysis
+const dicPath = join(process.cwd(), 'node_modules', 'kuromoji', 'dict');
 dictFiles.forEach((file) => {
 	try {
-		read(`node_modules/kuromoji/dict/${file}`);
+		read(join(dicPath, file));
 	} catch {
 		// Ignore errors - this is just a bundler hint
 	}
