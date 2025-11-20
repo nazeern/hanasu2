@@ -3,6 +3,33 @@ import type { IpadicFeatures, Tokenizer } from 'kuromoji';
 import logger from '$lib/logger';
 import { dev } from '$app/environment';
 import { join } from 'path';
+import { read } from '$app/server';
+
+// Signal to Vercel bundler to include dictionary files
+// These read() calls at module level ensure files are bundled
+const dictFiles = [
+	'base.dat.gz',
+	'cc.dat.gz',
+	'check.dat.gz',
+	'tid.dat.gz',
+	'tid_map.dat.gz',
+	'tid_pos.dat.gz',
+	'unk.dat.gz',
+	'unk_char.dat.gz',
+	'unk_compat.dat.gz',
+	'unk_invoke.dat.gz',
+	'unk_map.dat.gz',
+	'unk_pos.dat.gz'
+];
+
+// Call read() at module level for static analysis
+dictFiles.forEach((file) => {
+	try {
+		read(`node_modules/kuromoji/dict/${file}`);
+	} catch {
+		// Ignore errors - this is just a bundler hint
+	}
+});
 
 export type ParsedWord = {
 	surfaceForm: string;
@@ -30,7 +57,6 @@ function getTokenizer(): Promise<Tokenizer<IpadicFeatures>> {
 
 	tokenizerPromise = new Promise((resolve, reject) => {
 		// Use absolute path to node_modules/kuromoji/dict
-		// Files are explicitly included via vercel.json
 		const dicPath = dev
 			? 'node_modules/kuromoji/dict'
 			: join(process.cwd(), 'node_modules', 'kuromoji', 'dict');
