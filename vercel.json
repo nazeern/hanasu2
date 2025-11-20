@@ -1,0 +1,7 @@
+{
+  "functions": {
+    "fn.func": {
+      "includeFiles": "node_modules/kuromoji/dict/**"
+    }
+  }
+}
