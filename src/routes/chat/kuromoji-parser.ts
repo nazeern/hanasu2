@@ -3,34 +3,7 @@ import type { IpadicFeatures, Tokenizer } from 'kuromoji';
 import logger from '$lib/logger';
 import { dev } from '$app/environment';
 import { join } from 'path';
-import { read } from '$app/server';
-
-// Signal to Vercel bundler to include dictionary files
-// These read() calls at module level ensure files are bundled
-const dictFiles = [
-	'base.dat.gz',
-	'cc.dat.gz',
-	'check.dat.gz',
-	'tid.dat.gz',
-	'tid_map.dat.gz',
-	'tid_pos.dat.gz',
-	'unk.dat.gz',
-	'unk_char.dat.gz',
-	'unk_compat.dat.gz',
-	'unk_invoke.dat.gz',
-	'unk_map.dat.gz',
-	'unk_pos.dat.gz'
-];
-
-// Call read() at module level for static analysis
-const dicPath = join(process.cwd(), 'node_modules', 'kuromoji', 'dict');
-dictFiles.forEach((file) => {
-	try {
-		read(join(dicPath, file));
-	} catch {
-		// Ignore errors - this is just a bundler hint
-	}
-});
+import { existsSync, readdirSync, statSync } from 'fs';
 
 export type ParsedWord = {
 	surfaceForm: string;
@@ -60,13 +33,82 @@ function getTokenizer(): Promise<Tokenizer<IpadicFeatures>> {
 		// Use absolute path to node_modules/kuromoji/dict
 		const dicPath = dev
 			? 'node_modules/kuromoji/dict'
-			: join(process.cwd(), 'node_modules', 'kuromoji', 'dict');
+			: join(process.cwd(), 'node_modules/kuromoji/dict');
 
-		logger.info(`Initializing kuromoji tokenizer with dicPath: ${dicPath}`);
+		// Comprehensive logging for debugging
+		logger.info('=== Kuromoji Initialization Debug Info ===');
+		logger.info({
+			environment: dev ? 'development' : 'production',
+			dicPath,
+			cwd: process.cwd(),
+			platform: process.platform,
+			nodeVersion: process.version
+		});
+
+		// Check if path exists
+		const pathExists = existsSync(dicPath);
+		logger.info({ dicPath, pathExists });
+
+		if (pathExists) {
+			try {
+				const files = readdirSync(dicPath);
+				logger.info({ dicPath, fileCount: files.length, files });
+
+				// Log file sizes
+				const fileDetails = files.map((file) => {
+					try {
+						const filePath = join(dicPath, file);
+						const stats = statSync(filePath);
+						return { file, size: stats.size, isFile: stats.isFile() };
+					} catch (err) {
+						return { file, error: String(err) };
+					}
+				});
+				logger.info({ dicPath, fileDetails });
+			} catch (err) {
+				logger.error('Failed to read dicPath directory', {
+					dicPath,
+					error: err instanceof Error ? err.message : String(err),
+					stack: err instanceof Error ? err.stack : undefined
+				});
+			}
+		} else {
+			logger.error('Dictionary path does not exist', { dicPath });
+
+			// Try to find where kuromoji might be installed
+			const possiblePaths = [
+				join(process.cwd(), 'node_modules', 'kuromoji', 'dict'),
+				join(process.cwd(), '.svelte-kit', 'output', 'server', 'node_modules', 'kuromoji', 'dict'),
+				'node_modules/kuromoji/dict',
+				'/var/task/node_modules/kuromoji/dict'
+			];
+
+			logger.info('Checking possible dictionary locations:');
+			possiblePaths.forEach((path) => {
+				const exists = existsSync(path);
+				logger.info({ path, exists });
+				if (exists) {
+					try {
+						const files = readdirSync(path);
+						logger.info({ path, fileCount: files.length });
+					} catch (err) {
+						logger.error({ path, error: String(err) });
+					}
+				}
+			});
+		}
+
+		logger.info(`Attempting to build kuromoji tokenizer with dicPath: ${dicPath}`);
 
 		kuromoji.builder({ dicPath }).build((err, tokenizer) => {
 			if (err || !tokenizer) {
-				logger.error('Failed to initialize kuromoji tokenizer', err);
+				logger.error('Failed to initialize kuromoji tokenizer', {
+					dicPath,
+					errorMessage: err instanceof Error ? err.message : String(err),
+					errorStack: err instanceof Error ? err.stack : undefined,
+					errorType: err ? err.constructor.name : 'unknown',
+					fullError: err
+				});
 				tokenizerPromise = null;
 				reject(err || new Error('Tokenizer initialization failed'));
 				return;
@@ -94,7 +136,9 @@ export async function parseWordAtIndex(
 	charIndex: number
 ): Promise<ParsedWord | null> {
 	try {
+		logger.info('parseWordAtIndex called', { sentence, charIndex });
 		const tokenizer = await getTokenizer();
+		logger.info('Tokenizer retrieved successfully');
 		const tokens = tokenizer.tokenize(sentence);
 
 		logger.info(`Tokenizing sentence: "${sentence}" at index ${charIndex}`);
@@ -141,7 +185,9 @@ export async function parseWordAtIndex(
  */
 export async function tokenizeSentence(sentence: string): Promise<ParsedWord[]> {
 	try {
+		logger.info('tokenizeSentence called', { sentence });
 		const tokenizer = await getTokenizer();
+		logger.info('Tokenizer retrieved successfully');
 		const tokens = tokenizer.tokenize(sentence);
 
 		logger.info(`Tokenizing full sentence: "${sentence}" - found ${tokens.length} tokens`);
