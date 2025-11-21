@@ -7,8 +7,9 @@
 	interface Props {
 		class?: string;
 		userInitial: string;
+		userEmail: string;
 	}
-	let { class: className, userInitial }: Props = $props();
+	let { class: className, userInitial, userEmail }: Props = $props();
 
 	let dropdownOpen = $state(false);
 
@@ -36,7 +37,12 @@
 	<p class="text-white">{userInitial}</p>
 	{#if dropdownOpen}
 		<Container class="absolute top-13 -right-3" onclick={(e)=>e.stopPropagation()}>
-
+			<div class="px-4 py-3 text-left text-text-secondary border-b border-border">
+				{userEmail}
+			</div>
+			<a href="/api/portal" class="block">
+				<Button class='w-48 text-left' variant="menu">Subscriptions</Button>
+			</a>
 			<form method="POST" action="/logout">
 				<Button class='w-48 text-left' variant="menu">Logout</Button>
 			</form>

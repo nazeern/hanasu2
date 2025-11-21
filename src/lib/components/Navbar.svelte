@@ -6,10 +6,11 @@
 
 	interface Props {
 		userInitial: string;
+		userEmail: string;
 		langInfo?: LangInfo;
 	}
 
-	let { userInitial, langInfo }: Props = $props();
+	let { userInitial, userEmail, langInfo }: Props = $props();
 </script>
 
 <nav class="w-full bg-background border-b border-border">
@@ -17,7 +18,7 @@
 		<Logo />
 		<div class="flex items-center gap-4">
 			<LanguageIcon {langInfo} />
-			<ProfileIcon {userInitial} />
+			<ProfileIcon {userInitial} {userEmail} />
 		</div>
 	</div>
 </nav>
