@@ -1,12 +1,8 @@
 <script lang="ts">
 	import PricingCard from '$lib/components/pricing/PricingCard.svelte';
 	import Button from '$lib/components/Button.svelte';
-	import { POLAR_CHECKOUT_URL } from '$lib/constants';
 
 	let { data } = $props();
-
-	const checkoutUrl = new URL(POLAR_CHECKOUT_URL);
-	checkoutUrl.searchParams.set('customer_email', data.userEmail);
 
 	const freePlanFeatures = [
 		'15 conversations per month',
@@ -110,7 +106,7 @@
 					billingPeriod="per month"
 					features={premiumFeatures}
 					ctaText="Start Free Trial"
-					ctaHref={checkoutUrl.toString()}
+					ctaHref={data.monthlyCheckoutUrl}
 					highlighted={true}
 					badge="Most Popular"
 					badgeColor="primary"
@@ -123,7 +119,7 @@
 					billingPeriod="per year"
 					features={premiumFeatures}
 					ctaText="Start Free Trial"
-					ctaHref={checkoutUrl.toString()}
+					ctaHref={data.yearlyCheckoutUrl}
 					badge="Best Value"
 					badgeColor="success"
 					savingsText="Save $53.89/year (64% off)"

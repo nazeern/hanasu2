@@ -14,9 +14,13 @@ export const langInfoList: LangInfo[] = [
 	},
 ];
 
-export const POLAR_CHECKOUT_URL = dev
-	? 'https://sandbox-api.polar.sh/v1/checkout-links/polar_cl_uGE7vdiADuJ2AFuVtfahEArHTwDBt0GYDKRGA3o634o/redirect'
-	: 'https://buy.polar.sh/polar_cl_6TwYs4yszHRh7GNhw55nsxyQ3lN67K988TT5h2DZKQB';
+export const POLAR_PRODUCT_MONTHLY_ID = dev
+	? 'cb6b9687-6980-4104-93c7-6cb627e94248'
+	: '6cee0196-fa1d-48e2-8037-167cbe0be4a4';
+
+export const POLAR_PRODUCT_YEARLY_ID = dev
+	? '431b925a-7071-4512-9af4-bff689e11376'
+	: '8d40abd5-3574-4521-9638-c493841f0574';
 
 export interface TagInfo {
 	code: string;
