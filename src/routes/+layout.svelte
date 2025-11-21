@@ -5,6 +5,7 @@
 	import { onMount } from 'svelte';
 	import Navbar from '$lib/components/Navbar.svelte';
 	import UnauthNavbar from '$lib/components/UnauthNavbar.svelte';
+	import { ProgressBar } from '@prgm/sveltekit-progress-bar';
 
 	let { data, children } = $props();
 	let { supabase, session } = $derived(data);
@@ -23,6 +24,15 @@
 <svelte:head>
 	<link rel="icon" href={favicon} />
 </svelte:head>
+
+<ProgressBar
+	color="#2563eb"
+	zIndex={100}
+	minimum={0.16}
+	maximum={0.95}
+	intervalTime={300}
+	settleTime={800}
+/>
 
 <div class="h-screen flex flex-col">
 	{#if session}
