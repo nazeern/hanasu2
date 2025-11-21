@@ -5,7 +5,7 @@ import { dev } from '$app/environment';
 
 export const GET = Checkout({
 	accessToken: POLAR_ACCESS_TOKEN,
-	successUrl: `${PUBLIC_SITE_URL}/dashboard?checkout=success`,
+	successUrl: `${PUBLIC_SITE_URL}/onboarding/congrats`,
 	returnUrl: `${PUBLIC_SITE_URL}/pricing`,
 	server: dev ? 'sandbox' : 'production',
 	theme: 'light'

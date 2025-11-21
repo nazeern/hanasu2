@@ -67,6 +67,7 @@
 <form
 	id="onboarding-form"
 	method="POST"
+	action="?/complete"
 	use:enhance={() => {
 		isSubmitting = true;
 		return async ({ update }) => {

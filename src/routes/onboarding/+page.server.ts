@@ -8,7 +8,7 @@ export const load: PageServerLoad = async ({ parent }) => {
 };
 
 export const actions: Actions = {
-	default: async ({ request, locals: { supabase, safeGetSession } }) => {
+	complete: async ({ request, locals: { supabase, safeGetSession } }) => {
 		const { user } = await safeGetSession();
 		if (!user) {
 			return fail(401, { error: 'Unauthorized' });
@@ -38,6 +38,40 @@ export const actions: Actions = {
 			.update({
 				experienced: experiencedArray,
 				proficiency: proficiency
+			})
+			.eq('id', user.id);
+
+		if (error) {
+			return fail(500, { error: 'Failed to update profile' });
+		}
+
+		throw redirect(303, '/dashboard');
+	},
+	skip: async ({ locals: { supabase, safeGetSession } }) => {
+		const { user } = await safeGetSession();
+		if (!user) {
+			return fail(401, { error: 'Unauthorized' });
+		}
+
+		// Get current profile to preserve existing experienced array
+		const { data: currentProfile } = await supabase
+			.from('profiles')
+			.select('experienced')
+			.eq('id', user.id)
+			.single();
+
+		const experiencedArray = currentProfile?.experienced || [];
+
+		// Add 'onboard' to experienced array if not already present
+		if (!experiencedArray.includes('onboard')) {
+			experiencedArray.push('onboard');
+		}
+
+		// Update profile with onboarding completion (skip - no proficiency update)
+		const { error } = await supabase
+			.from('profiles')
+			.update({
+				experienced: experiencedArray
 			})
 			.eq('id', user.id);
 
