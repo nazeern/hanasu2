@@ -4,12 +4,14 @@ import { OPENAI_SECRET_KEY } from '$env/static/private';
 import { isString } from '$lib/util';
 import { dev } from '$app/environment';
 import { randomUUID } from 'crypto';
+import { UsageService, limits } from '$lib/server/usage';
 
 export type SvelteFetch = Parameters<PageServerLoad>[0]['fetch'];
 
 export const load: PageServerLoad = async ({
 	fetch,
 	url,
+	parent,
 	locals: { safeGetSession, supabase }
 }) => {
 	const testMode = dev && url.searchParams.get('test') === 'true';
@@ -19,6 +21,16 @@ export const load: PageServerLoad = async ({
 	if (!session || !user) {
 		redirect(303, '/login');
 	}
+
+	// Fetch subscription status and usage stats concurrently
+	const usage = new UsageService(supabase);
+	const [{ subscriptionStatus }, rawStats] = await Promise.all([
+		parent(),
+		usage.stats(user.id)
+	]);
+
+	// Calculate limits based on stats and subscription
+	const usageCheck = limits(rawStats, subscriptionStatus.isPremium);
 
 	const getProfileStmt = supabase.from('profiles').select('lang, proficiency').eq('id', user.id).single();
 	const { data: profile } = await getProfileStmt;
@@ -30,7 +42,8 @@ export const load: PageServerLoad = async ({
 		language: profile?.lang ?? 'ja',
 		proficiency: profile?.proficiency ?? 'advanced',
 		testMode: testMode,
-		prompt: prompt ?? 'How was your day today?'
+		prompt: prompt ?? 'How was your day today?',
+		usageCheck
 	};
 };
 

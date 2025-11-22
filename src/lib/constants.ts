@@ -22,6 +22,13 @@ export const POLAR_PRODUCT_YEARLY_ID = dev
 	? '431b925a-7071-4512-9af4-bff689e11376'
 	: '8d40abd5-3574-4521-9638-c493841f0574';
 
+// Usage limits for free tier users
+export const FREE_DAILY_MESSAGE_LIMIT = 20;
+export const FREE_MONTHLY_MESSAGE_LIMIT = 500;
+
+// Premium users get a very large limit (effectively unlimited)
+export const UNLIMITED_MESSAGES = 999999;
+
 export interface TagInfo {
 	code: string;
 	displayName: string;
