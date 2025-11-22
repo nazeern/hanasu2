@@ -8,9 +8,16 @@
 		userInitial: string;
 		userEmail: string;
 		langInfo?: LangInfo;
+		subscriptionStatus?: {
+			isPremium: boolean;
+			subscription: any;
+			subscriptions: any[];
+			customer: any;
+		};
 	}
 
-	let { userInitial, userEmail, langInfo }: Props = $props();
+	let { userInitial, userEmail, langInfo, subscriptionStatus }: Props = $props();
+	let isPremium = $derived(subscriptionStatus?.isPremium ?? false);
 </script>
 
 <nav class="w-full bg-background border-b border-border">
@@ -18,7 +25,7 @@
 		<Logo />
 		<div class="flex items-center gap-4">
 			<LanguageIcon {langInfo} />
-			<ProfileIcon {userInitial} {userEmail} />
+			<ProfileIcon {userInitial} {userEmail} {isPremium} />
 		</div>
 	</div>
 </nav>

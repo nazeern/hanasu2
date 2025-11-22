@@ -1,6 +1,7 @@
 import type { User } from '@supabase/supabase-js';
 import type { LayoutServerLoad } from './$types';
 import { langInfoList, type LangInfo } from '$lib/constants';
+import { getCustomerSubscriptionStatus } from '$lib/server/polar';
 
 function getUserInitial(user: User | null | undefined): string {
 	if (!user) return '?';
@@ -24,6 +25,9 @@ export const load: LayoutServerLoad = async ({ locals: { safeGetSession, supabas
 		.limit(1)
 		.single();
 
+	// Check subscription status (handles null user gracefully)
+	const subscriptionStatus = await getCustomerSubscriptionStatus(user?.id);
+
 	return {
 		session,
 		user,
@@ -32,6 +36,7 @@ export const load: LayoutServerLoad = async ({ locals: { safeGetSession, supabas
 		userInitial: getUserInitial(user),
 		userEmail: user?.email ?? 'Guest',
 		profile: profile,
-		langInfo: langInfoList.find((lang) => lang.code === profile?.lang)
+		langInfo: langInfoList.find((lang) => lang.code === profile?.lang),
+		subscriptionStatus
 	};
 };
