@@ -85,6 +85,7 @@ export const POST: RequestHandler = async ({ request }) => {
 		const userPrompt = createUserPrompt(langDisplayName, text, contextPrompt);
 
 		const tipText = await callOpenAI(systemPrompt, userPrompt);
+		logger.info(tipText, 'AI assist tip received');
 		const tip = tipText.toLowerCase() === 'null' ? null : tipText;
 
 		return json({ tip });

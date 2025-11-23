@@ -15,6 +15,7 @@ export type ChatMessage = {
 	tips?: string;
 	tipsLoading: boolean;
 	tokens?: ParsedWord[];
+	tokensLoading: boolean;
 };
 
 interface ChatInterface {
@@ -25,8 +26,8 @@ interface ChatInterface {
 	recording: boolean;
 	connect(ephemeralKey?: string, initialPrompt?: string): Promise<boolean>;
 	close(): void;
-	translate(message: ChatMessage): Promise<void>;
-	aiAssist(message: ChatMessage): Promise<void>;
+	translate(messageIndex: number): Promise<void>;
+	aiAssist(messageIndex: number): Promise<void>;
 	startRecording(): void;
 	stopRecording(): void;
 	saveSession(): Promise<void>;
@@ -83,7 +84,8 @@ export class Chat implements ChatInterface {
 				id: 'test-message-1',
 				translationLoading: false,
 				status: 'completed',
-				tipsLoading: false
+				tipsLoading: false,
+				tokensLoading: false
 			});
 			this.messages.push({
 				text: 'よろしくお願う',
@@ -91,11 +93,12 @@ export class Chat implements ChatInterface {
 				id: 'test-message-2',
 				translationLoading: false,
 				status: 'completed',
-				tipsLoading: false
+				tipsLoading: false,
+				tokensLoading: false
 			});
 
 			// Tokenize test messages
-			this.messages.forEach((msg) => this.tokenizeMessage(msg));
+			this.messages.forEach((msg, index) => this.tokenizeMessage(index));
 		}
 
 		this.session.on('history_updated', (items) => {
@@ -105,22 +108,24 @@ export class Chat implements ChatInterface {
 				.forEach((item) => {
 					const incomingMessage = toChatMessage(item);
 					if (!incomingMessage) return;
-					let existingMessage = this.messages.findLast((msg) => msg.id === incomingMessage.id);
-					if (existingMessage) {
+					const existingIndex = this.messages.findIndex((msg) => msg.id === incomingMessage.id);
+					if (existingIndex !== -1) {
 						// Mutate the existing message object to preserve reactivity
-						Object.assign(existingMessage, incomingMessage);
-						this.aiAssist(existingMessage);
-						this.tokenizeMessage(existingMessage);
+						Object.assign(this.messages[existingIndex], incomingMessage);
+						this.aiAssist(existingIndex);
+						this.tokenizeMessage(existingIndex);
 					} else {
 						// Add new message
 						const newMessage: ChatMessage = {
 							...incomingMessage,
 							translationLoading: false,
-							tipsLoading: false
+							tipsLoading: false,
+							tokensLoading: false
 						};
 						this.messages.push(newMessage);
-						this.aiAssist(newMessage);
-						this.tokenizeMessage(newMessage);
+						const newIndex = this.messages.length - 1;
+						this.aiAssist(newIndex);
+						this.tokenizeMessage(newIndex);
 					}
 				});
 		});
@@ -169,12 +174,12 @@ export class Chat implements ChatInterface {
 		this.session.close();
 	}
 
-	async translate(message: ChatMessage): Promise<void> {
-		if (message.translatedText) {
-			return;
-		}
+	async translate(messageIndex: number): Promise<void> {
+		if (messageIndex < 0 || messageIndex >= this.messages.length) return;
+		if (this.messages[messageIndex].translatedText) return;
 
-		message.translationLoading = true;
+		// Update through array reference to ensure reactivity
+		this.messages[messageIndex].translationLoading = true;
 		try {
 			const response = await fetch('/chat/translate', {
 				method: 'POST',
@@ -182,33 +187,36 @@ export class Chat implements ChatInterface {
 					'Content-Type': 'application/json'
 				},
 				body: JSON.stringify({
-					text: message.text
+					text: this.messages[messageIndex].text
 				})
 			});
 
 			if (!response.ok) {
 				logger.error('Translation API request failed');
+				this.messages[messageIndex].translationLoading = false;
 				return;
 			}
 
 			const result = await response.json();
 			if (result.translatedText) {
-				message.translatedText = result.translatedText;
+				this.messages[messageIndex].translatedText = result.translatedText;
 			}
+			this.messages[messageIndex].translationLoading = false;
 		} catch (error) {
 			logger.error('Translation failed');
-		} finally {
-			message.translationLoading = false;
+			this.messages[messageIndex].translationLoading = false;
 		}
 	}
 
-	async aiAssist(message: ChatMessage): Promise<void> {
+	async aiAssist(messageIndex: number): Promise<void> {
+		if (messageIndex < 0 || messageIndex >= this.messages.length) return;
+		const message = this.messages[messageIndex];
 		if (message.from !== 'user' || message.status !== 'completed') return;
 		if (message.tipsLoading || message.tips !== undefined) return;
 
-		message.tipsLoading = true;
+		// Update through array reference to ensure reactivity
+		this.messages[messageIndex].tipsLoading = true;
 		try {
-			const messageIndex = this.messages.findIndex((msg) => msg.id === message.id);
 			const recentMessages = this.messages.slice(messageIndex - 2, messageIndex);
 			const response = await fetch('/chat/assist', {
 				method: 'POST',
@@ -216,7 +224,7 @@ export class Chat implements ChatInterface {
 					'Content-Type': 'application/json'
 				},
 				body: JSON.stringify({
-					text: message.text,
+					text: this.messages[messageIndex].text,
 					langDisplayName: this.langInfo.displayName,
 					recentMessages
 				})
@@ -224,22 +232,27 @@ export class Chat implements ChatInterface {
 
 			if (!response.ok) {
 				logger.error('AI assist API request failed');
+				this.messages[messageIndex].tipsLoading = false;
 				return;
 			}
 
 			const result = await response.json();
-			message.tips = result.tip;
+			this.messages[messageIndex].tips = result.tip;
+			this.messages[messageIndex].tipsLoading = false;
 		} catch (error) {
 			logger.error('AI assist failed');
-		} finally {
-			message.tipsLoading = false;
+			this.messages[messageIndex].tipsLoading = false;
 		}
 	}
 
-	async tokenizeMessage(message: ChatMessage): Promise<void> {
+	async tokenizeMessage(messageIndex: number): Promise<void> {
+		if (messageIndex < 0 || messageIndex >= this.messages.length) return;
+		const message = this.messages[messageIndex];
 		if (message.status !== 'completed') return;
-		if (message.tokens !== undefined) return;
+		if (message.tokensLoading || message.tokens !== undefined) return;
 
+		// Update through array reference to ensure reactivity
+		this.messages[messageIndex].tokensLoading = true;
 		try {
 			const response = await fetch('/chat/tokenize', {
 				method: 'POST',
@@ -247,19 +260,22 @@ export class Chat implements ChatInterface {
 					'Content-Type': 'application/json'
 				},
 				body: JSON.stringify({
-					text: message.text
+					text: this.messages[messageIndex].text
 				})
 			});
 
 			if (!response.ok) {
 				logger.error('Tokenization API request failed');
+				this.messages[messageIndex].tokensLoading = false;
 				return;
 			}
 
 			const result = await response.json();
-			message.tokens = result.tokens;
+			this.messages[messageIndex].tokens = result.tokens;
+			this.messages[messageIndex].tokensLoading = false;
 		} catch (error) {
 			logger.error('Tokenization failed', error);
+			this.messages[messageIndex].tokensLoading = false;
 		}
 	}
 
