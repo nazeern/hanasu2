@@ -13,9 +13,10 @@
 	interface Props {
 		onback: () => void;
 		selectedProficiency: string;
+		selectedFrequency: string;
 	}
 
-	let { onback, selectedProficiency }: Props = $props();
+	let { onback, selectedProficiency, selectedFrequency }: Props = $props();
 
 	// Generate temporary session ID for onboarding demo
 	const tempSessionId = crypto.randomUUID();
@@ -77,6 +78,7 @@
 	}}
 >
 	<input type="hidden" name="proficiency" value={selectedProficiency} />
+	<input type="hidden" name="practice_frequency" value={selectedFrequency} />
 
 	<div class="flex gap-4 justify-center">
 		<Button type="button" variant="secondary" onclick={onback} disabled={isSubmitting}>

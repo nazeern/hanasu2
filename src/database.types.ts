@@ -46,6 +46,7 @@ export type Database = {
           lang: string
           name: string | null
           notify: boolean
+          practice_frequency: string
           proficiency: string
           stripe_id: string | null
           updated_at: string | null
@@ -57,6 +58,7 @@ export type Database = {
           lang?: string
           name?: string | null
           notify?: boolean
+          practice_frequency?: string
           proficiency?: string
           stripe_id?: string | null
           updated_at?: string | null
@@ -68,6 +70,7 @@ export type Database = {
           lang?: string
           name?: string | null
           notify?: boolean
+          practice_frequency?: string
           proficiency?: string
           stripe_id?: string | null
           updated_at?: string | null

@@ -1,5 +1,6 @@
 import { redirect, fail } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
+import { practiceFrequencyOptions, type PracticeFrequency } from './constants';
 
 export const load: PageServerLoad = async ({ parent }) => {
 	const { profile } = await parent();
@@ -18,6 +19,14 @@ export const actions: Actions = {
 		const proficiencyValue = formData.get('proficiency') as string | null;
 		const proficiency = proficiencyValue && proficiencyValue.trim() !== '' ? proficiencyValue : undefined;
 
+		const practiceFrequencyValue = formData.get('practice_frequency') as string | null;
+		const validFrequencies = practiceFrequencyOptions.map((opt) => opt.id);
+		if (!practiceFrequencyValue || !validFrequencies.includes(practiceFrequencyValue as PracticeFrequency)) {
+			return fail(400, { error: 'Invalid practice frequency' });
+		}
+
+		const practice_frequency = practiceFrequencyValue as PracticeFrequency;
+
 		// Get current profile to preserve existing experienced array
 		const { data: currentProfile } = await supabase
 			.from('profiles')
@@ -32,12 +41,12 @@ export const actions: Actions = {
 			experiencedArray.push('onboard');
 		}
 
-		// Update profile with onboarding completion and proficiency
 		const { error } = await supabase
 			.from('profiles')
 			.update({
 				experienced: experiencedArray,
-				proficiency: proficiency
+				proficiency: proficiency,
+				practice_frequency: practice_frequency
 			})
 			.eq('id', user.id);
 
@@ -67,7 +76,6 @@ export const actions: Actions = {
 			experiencedArray.push('onboard');
 		}
 
-		// Update profile with onboarding completion (skip - no proficiency update)
 		const { error } = await supabase
 			.from('profiles')
 			.update({

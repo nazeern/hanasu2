@@ -1,11 +1,13 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import StepOne from './StepOne.svelte';
-	import StepTwo from './StepTwo.svelte';
-	import StepThree from './StepThree.svelte';
-	import { proficiencyLevels } from './constants';
+	import GoalStep from './GoalStep.svelte';
+	import PracticeStep from './PracticeStep.svelte';
+	import ProficiencyStep from './ProficiencyStep.svelte';
+	import DemoStep from './DemoStep.svelte';
+	import { proficiencyLevels, type PracticeFrequency } from './constants';
 
-	let step = $state<1 | 2 | 3>(1);
+	let step = $state<1 | 2 | 3 | 4>(1);
+	let selectedFrequency = $state<PracticeFrequency | ''>('');
 	let selectedProficiency = $state<string>(proficiencyLevels[0].id);
 	let skipping = $state(false);
 
@@ -43,15 +45,17 @@
 
 		<!-- Progress indicator -->
 		<div class="text-center mb-8">
-			<p class="text-sm text-text-secondary">Step {step} of 3</p>
+			<p class="text-sm text-text-secondary">Step {step} of 4</p>
 		</div>
 
 		{#if step === 1}
-			<StepOne onnext={next} />
+			<GoalStep onnext={next} />
 		{:else if step === 2}
-			<StepTwo onback={back} onnext={next} bind:selectedProficiency />
+			<PracticeStep onback={back} onnext={next} bind:selectedFrequency />
+		{:else if step === 3}
+			<ProficiencyStep onback={back} onnext={next} bind:selectedProficiency />
 		{:else}
-			<StepThree onback={back} {selectedProficiency} />
+			<DemoStep onback={back} {selectedProficiency} {selectedFrequency} />
 		{/if}
 	</div>
 </div>
