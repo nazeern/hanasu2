@@ -5,11 +5,25 @@
 	import ChatMessages from './ChatMessages.svelte';
 	import RecordButton from './RecordButton.svelte';
 	import DictionaryDrawer from './DictionaryDrawer.svelte';
+	import UsageIndicator from './UsageIndicator.svelte';
 
 	let { data } = $props();
 
-	const chat = new Chat(data.language, data.testMode, data.prompt, data.sessionId, data.proficiency);
+	const chat = new Chat(
+		data.language,
+		data.showSampleChat,
+		data.prompt,
+		data.sessionId,
+		data.proficiency
+	);
 	const dictionary = new Dictionary(data.language);
+
+	const usageCheck = data.usageCheck;
+
+	// Determine UI states
+	const shouldBlock = !usageCheck.canStartConversation;
+	const shouldWarn =
+		!shouldBlock && (usageCheck.daily.percent >= 80 || usageCheck.monthly.percent >= 80);
 
 	onMount(() => {
 		chat.connect(data.ephemeralKey);
@@ -28,9 +42,23 @@
 	});
 </script>
 
-<div class="h-full flex flex-col bg-gray-50">
-	<ChatMessages {chat} {dictionary} />
-	<RecordButton {chat} />
+<div class="h-full flex flex-col bg-gray-50 relative">
+	{#if shouldWarn}
+		<UsageIndicator {usageCheck} mode="warning" />
+	{/if}
+
+	<!-- Chat UI (always rendered) -->
+	<div class="flex-1 flex flex-col">
+		<ChatMessages {chat} {dictionary} />
+		<RecordButton {chat} disabled={shouldBlock} />
+	</div>
+
+	<!-- Blocking overlay (positioned absolutely on top, with backdrop blur) -->
+	{#if shouldBlock}
+		<div class="absolute inset-0">
+			<UsageIndicator {usageCheck} mode="blocking" />
+		</div>
+	{/if}
 </div>
 
 <DictionaryDrawer {dictionary} />

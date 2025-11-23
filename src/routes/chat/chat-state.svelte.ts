@@ -45,7 +45,7 @@ export class Chat implements ChatInterface {
 	messages = $state<ChatMessage[]>([]);
 	recording = $state<boolean>(false);
 
-	constructor(langCode: string, testMode: boolean, prompt: string, sessionId: string, proficiency: string = 'advanced') {
+	constructor(langCode: string, showSampleChat: boolean, prompt: string, sessionId: string, proficiency: string = 'advanced') {
 		this.sessionId = sessionId;
 		this.sessionStartTime = Date.now();
 		this.prompt = prompt;
@@ -75,7 +75,7 @@ export class Chat implements ChatInterface {
 		this.session = session;
 
 		this.messages = [];
-		if (testMode) {
+		if (showSampleChat) {
 			// Sample message if chat is disabled
 			this.messages.push({
 				text: 'こんにちは',

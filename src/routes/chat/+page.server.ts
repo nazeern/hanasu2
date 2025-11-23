@@ -34,14 +34,22 @@ export const load: PageServerLoad = async ({
 
 	const getProfileStmt = supabase.from('profiles').select('lang, proficiency').eq('id', user.id).single();
 	const { data: profile } = await getProfileStmt;
-	const ephemeralKey = await generateEphemeralKey(fetch);
+
+
+	const showSampleChat = testMode || !usageCheck.canStartConversation;
+	let ephemeralKey: string | undefined;
+	if (showSampleChat) {
+		ephemeralKey = undefined;
+	} else {
+		ephemeralKey = await generateEphemeralKey(fetch);
+	}
 
 	return {
 		sessionId: randomUUID(),
-		ephemeralKey: testMode ? undefined : ephemeralKey,
+		ephemeralKey: ephemeralKey,
 		language: profile?.lang ?? 'ja',
 		proficiency: profile?.proficiency ?? 'advanced',
-		testMode: testMode,
+		showSampleChat,
 		prompt: prompt ?? 'How was your day today?',
 		usageCheck
 	};
