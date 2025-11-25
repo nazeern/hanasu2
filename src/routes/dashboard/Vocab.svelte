@@ -10,9 +10,10 @@
 		nextVocab: DictEntry;
 		state?: StudyState;
 		hideWord?: boolean;
+		hideVocab?: boolean;
 	}
 
-	let { nextVocab, state = 'idle', hideWord = false }: Props = $props();
+	let { nextVocab, state = 'idle', hideWord = false, hideVocab = false }: Props = $props();
 
 	const borderClass = $derived(
 		state === 'correct'
@@ -32,9 +33,11 @@
 			<Tag {tag} />
 		{/each}
 	</div>
-	<div class="flex flex-col gap-2">
-		{#each nextVocab.definitions as definition, i}
-			<Definition {definition} index={i} {hideWord} />
-		{/each}
-	</div>
+	{#if !hideVocab}
+		<div class="flex flex-col gap-2">
+			{#each nextVocab.definitions as definition, i}
+				<Definition {definition} index={i} {hideWord} />
+			{/each}
+		</div>
+	{/if}
 </Container>

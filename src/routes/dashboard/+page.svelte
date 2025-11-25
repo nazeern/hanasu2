@@ -27,7 +27,7 @@
 	{#if nextVocab}
 		<Divider class="m-8" />
 		<Message text="STUDY VOCAB" class="mb-4 font-light text-2xl" />
-		<Vocab {nextVocab} />
+		<Vocab {nextVocab} hideVocab={true} />
 		<Link route='/study'>
 			Study Vocab
 		</Link>
