@@ -16,7 +16,7 @@ function getUserInitial(user: User | null | undefined): string {
 }
 
 export const load: LayoutServerLoad = async ({ locals: { safeGetSession, supabase }, cookies }) => {
-	const { session, user } = await safeGetSession();
+	const { user } = await safeGetSession();
 
 	const { data: profile } = await supabase
 		.from('profiles')
@@ -29,7 +29,6 @@ export const load: LayoutServerLoad = async ({ locals: { safeGetSession, supabas
 	const subscriptionStatus = await getCustomerSubscriptionStatus(user?.id);
 
 	return {
-		session,
 		user,
 		cookies: cookies.getAll(),
 		// Variables below can be accessed via `parent()` in child pages

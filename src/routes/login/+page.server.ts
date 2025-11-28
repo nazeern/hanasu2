@@ -4,9 +4,9 @@ import logger from '$lib/logger';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ locals: { safeGetSession } }) => {
-	const { session } = await safeGetSession();
+	const { user } = await safeGetSession();
 
-	if (session) {
+	if (user) {
 		redirect(303, '/dashboard');
 	}
 };

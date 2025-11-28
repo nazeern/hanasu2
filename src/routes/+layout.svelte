@@ -8,16 +8,14 @@
 	import { ProgressBar } from '@prgm/sveltekit-progress-bar';
 
 	let { data, children } = $props();
-	let { supabase, session } = $derived(data);
+	let { supabase, user } = $derived(data);
 
 	onMount(() => {
-		const { data } = supabase.auth.onAuthStateChange((_event, _session) => {
-			if (_session?.expires_at !== session?.expires_at) {
-				invalidate('supabase:auth');
-			}
+		const { data: authData } = supabase.auth.onAuthStateChange(() => {
+			invalidate('supabase:auth');
 		});
 
-		return () => data.subscription.unsubscribe();
+		return () => authData.subscription.unsubscribe();
 	});
 </script>
 
@@ -35,7 +33,7 @@
 />
 
 <div class="h-screen flex flex-col">
-	{#if session}
+	{#if user}
 		<Navbar {...data} />
 	{:else}
 		<UnauthNavbar />

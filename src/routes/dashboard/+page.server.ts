@@ -4,9 +4,9 @@ import type { Definition, DictEntry } from '$lib/dictionary.svelte';
 import { getRandomPrompts, calculateDailyStreak, calculateGoal, secondsToMinutes } from './utils';
 
 export const load: PageServerLoad = async ({ parent, locals: { supabase, safeGetSession } }) => {
-	const { user, session } = await safeGetSession();
+	const { user } = await safeGetSession();
 
-	if (!session || !user) {
+	if (!user) {
 		throw redirect(303, '/login');
 	}
 
@@ -88,7 +88,7 @@ export const load: PageServerLoad = async ({ parent, locals: { supabase, safeGet
 	};
 
 	return {
-		email: session.user.email,
+		email: user.email,
 		profile: profile,
 		prompts: getRandomPrompts(3),
 		nextVocab,

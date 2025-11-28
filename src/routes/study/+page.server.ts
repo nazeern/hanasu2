@@ -3,8 +3,8 @@ import type { PageServerLoad } from './$types';
 import type { Definition, DictEntry } from '$lib/dictionary.svelte';
 
 export const load: PageServerLoad = async ({ locals: { safeGetSession, supabase } }) => {
-	const { session, user } = await safeGetSession();
-	if (!session || !user) {
+	const { user } = await safeGetSession();
+	if (!user) {
 		redirect(303, '/login');
 	}
 

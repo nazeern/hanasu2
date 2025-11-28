@@ -2,7 +2,7 @@ import { PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_PUBLISHABLE_KEY } from '$env/stati
 import { createServerClient } from '@supabase/ssr';
 import type { Handle } from '@sveltejs/kit';
 import type { Database } from './database.types';
-import logger from '$lib/logger';
+import { posthog } from '$lib/server/posthog';
 
 export const handle: Handle = async ({ event, resolve }) => {
 	const { pathname } = event.url;
@@ -60,12 +60,11 @@ export const handle: Handle = async ({ event, resolve }) => {
 			error
 		} = await event.locals.supabase.auth.getUser();
 		if (error) {
-			return { session: null, user: null };
+			return { user: null };
 		}
-		const {
-			data: { session }
-		} = await event.locals.supabase.auth.getSession();
-		return { session, user };
+		// Don't call getSession() on server - it returns unauthenticated data
+		// and triggers security warnings. Client can get session if needed.
+		return { user };
 	};
 
 	return resolve(event, {

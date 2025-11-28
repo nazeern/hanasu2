@@ -17,8 +17,8 @@ export const load: PageServerLoad = async ({
 	const testMode = dev && url.searchParams.get('test') === 'true';
 	const prompt = url.searchParams.get('prompt');
 
-	const { session, user } = await safeGetSession();
-	if (!session || !user) {
+	const { user } = await safeGetSession();
+	if (!user) {
 		redirect(303, '/login');
 	}
 

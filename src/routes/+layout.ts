@@ -37,5 +37,5 @@ export const load: LayoutLoad = async ({ fetch, data, depends }) => {
 
 	// Pass through all server data from +layout.server.ts
 	// The client load function filters what reaches the Svelte component
-	return { ...data, supabase, session: data.session };
+	return { ...data, supabase };
 };

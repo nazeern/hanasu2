@@ -3,8 +3,8 @@ import type { RequestHandler } from './$types';
 import logger from '$lib/logger';
 
 export const POST: RequestHandler = async ({ request, locals: { safeGetSession, supabase } }) => {
-	const { session, user } = await safeGetSession();
-	if (!session || !user) {
+	const { user } = await safeGetSession();
+	if (!user) {
 		return json({ error: 'Unauthorized' }, { status: 401 });
 	}
 
@@ -45,8 +45,8 @@ export const POST: RequestHandler = async ({ request, locals: { safeGetSession, 
 };
 
 export const DELETE: RequestHandler = async ({ request, locals: { safeGetSession, supabase } }) => {
-	const { session, user } = await safeGetSession();
-	if (!session || !user) {
+	const { user } = await safeGetSession();
+	if (!user) {
 		return json({ error: 'Unauthorized' }, { status: 401 });
 	}
 
