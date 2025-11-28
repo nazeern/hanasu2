@@ -2,18 +2,57 @@ import { PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_PUBLISHABLE_KEY } from '$env/stati
 import { createServerClient } from '@supabase/ssr';
 import type { Handle } from '@sveltejs/kit';
 import type { Database } from './database.types';
+import logger from '$lib/logger';
 
 export const handle: Handle = async ({ event, resolve }) => {
-	event.locals.supabase = createServerClient<Database>(PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_PUBLISHABLE_KEY, {
-		cookies: {
-			getAll: () => event.cookies.getAll(),
-			setAll: (cookiesToSet) => {
-				cookiesToSet.forEach(({ name, value, options }) => {
-					event.cookies.set(name, value, { ...options, path: '/' });
-				});
+	const { pathname } = event.url;
+
+	// PostHog reverse proxy
+	if (pathname.startsWith('/relay-HxVI')) {
+		// Determine target hostname based on static or dynamic ingestion
+		const hostname = pathname.startsWith('/relay-HxVI/static/')
+			? 'us-assets.i.posthog.com' // Change to 'eu-assets.i.posthog.com' for EU Cloud
+			: 'us.i.posthog.com'; // Change to 'eu.i.posthog.com' for EU Cloud
+
+		// Build external URL
+		const url = new URL(event.request.url);
+		url.protocol = 'https:';
+		url.hostname = hostname;
+		url.port = '443';
+		url.pathname = pathname.replace('/relay-HxVI/', '/');
+
+		// Clone and adjust headers
+		const headers = new Headers(event.request.headers);
+		headers.set('Accept-Encoding', '');
+		headers.set('host', hostname);
+
+		// Proxy the request
+		const posthogResponse = await fetch(url.toString(), {
+			method: event.request.method,
+			headers: headers,
+			body: event.request.body,
+			duplex: 'half'
+		} as RequestInit);
+
+		// Return the proxied response
+		return posthogResponse;
+	}
+
+	// Supabase client setup
+	event.locals.supabase = createServerClient<Database>(
+		PUBLIC_SUPABASE_URL,
+		PUBLIC_SUPABASE_PUBLISHABLE_KEY,
+		{
+			cookies: {
+				getAll: () => event.cookies.getAll(),
+				setAll: (cookiesToSet) => {
+					cookiesToSet.forEach(({ name, value, options }) => {
+						event.cookies.set(name, value, { ...options, path: '/' });
+					});
+				}
 			}
 		}
-	});
+	);
 
 	event.locals.safeGetSession = async () => {
 		const {

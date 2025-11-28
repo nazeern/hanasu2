@@ -14,6 +14,8 @@ export const langInfoList: LangInfo[] = [
 	},
 ];
 
+export const POSTHOG_PUBLIC_KEY = 'phc_zEmBXWmrXB9QkUBbGxpKmy36hH3wEv95lms701xHxVI'
+
 export const POLAR_PRODUCT_MONTHLY_ID = dev
 	? 'cb6b9687-6980-4104-93c7-6cb627e94248'
 	: '6cee0196-fa1d-48e2-8037-167cbe0be4a4';
