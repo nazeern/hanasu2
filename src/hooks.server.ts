@@ -67,9 +67,69 @@ export const handle: Handle = async ({ event, resolve }) => {
 		return { user };
 	};
 
-	return resolve(event, {
+	// Track server-side request latency with PostHog
+	const startTime = performance.now();
+	const { user } = await event.locals.safeGetSession();
+
+	const response = await resolve(event, {
 		filterSerializedResponseHeaders(name: string) {
 			return name === 'content-range' || name === 'x-supabase-api-version';
 		}
 	});
+
+	// Only track non-proxy routes
+	if (!pathname.startsWith('/relay-HxVI')) {
+		const duration = performance.now() - startTime;
+
+		let eventName: string;
+		let actionName: string | undefined;
+
+		const hasSingleSearchParam = event.url.searchParams.size == 1;
+
+		// Form actions are POST w/ single search param like '?/skip'
+		if (event.request.method === 'POST' && hasSingleSearchParam) {
+			eventName = 'form_action';
+			// The search param key contains the action name (e.g., "/login" or "/")
+			const formActionKey = event.url.searchParams.keys().toArray().at(0)
+			if (formActionKey === '/') {
+				actionName = 'default'
+			} else {
+				actionName = formActionKey?.slice(1);
+			}
+		}
+		// Other non-GET requests are API routes, like +server.ts
+		else if (event.request.method !== 'GET' && event.route.id) {
+			eventName = 'api_route';
+		}
+		// GET requests are likely a load function
+		else {
+			eventName = 'load_function';
+		}
+
+		try {
+			const properties: Record<string, string | number | boolean> = {
+				route: event.route.id || pathname,
+				method: event.request.method,
+				duration_ms: Math.round(duration),
+				status: response.status,
+				is_authenticated: !!user,
+			};
+
+			// Only include action_name for form actions
+			if (eventName === 'form_action' && actionName !== undefined) {
+				properties.action_name = actionName;
+			}
+
+			posthog.capture({
+				distinctId: user?.id || event.getClientAddress(),
+				event: eventName,
+				properties
+			});
+		} catch (error) {
+			// Don't let tracking errors break the app
+			console.error('PostHog tracking error:', error);
+		}
+	}
+
+	return response;
 };
