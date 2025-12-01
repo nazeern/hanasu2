@@ -26,8 +26,8 @@ export const handle: Handle = async ({ event, resolve }) => {
 		headers.set('Accept-Encoding', '');
 		headers.set('host', hostname);
 
-		// Proxy the request
-		const posthogResponse = await fetch(url.toString(), {
+		// Proxy the request using SvelteKit's fetch
+		const posthogResponse = await event.fetch(url.toString(), {
 			method: event.request.method,
 			headers: headers,
 			body: event.request.body,

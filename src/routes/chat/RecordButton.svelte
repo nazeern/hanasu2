@@ -28,8 +28,10 @@
 		onpointerdown={() => !disabled && chat.startRecording()}
 		onpointerup={() => !disabled && chat.stopRecording()}
 		onpointerleave={() => !disabled && chat.stopRecording()}
+		oncontextmenu={(e) => e.preventDefault()}
 		disabled={isDisabled}
 		aria-label={chat.recording ? 'Recording' : 'Hold to record'}
+		style="touch-action: manipulation; -webkit-touch-callout: none; user-select: none;"
 	>
 		🎤
 	</button>
