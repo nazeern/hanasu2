@@ -20,10 +20,14 @@
 
 	const usageCheck = data.usageCheck;
 
-	// Determine UI states
-	const shouldBlock = !usageCheck.canStartConversation;
-	const shouldWarn =
-		!shouldBlock && (usageCheck.daily.percent >= 80 || usageCheck.monthly.percent >= 80);
+	const numMessages = $derived(chat.messages.length);
+	const dailyRemaining = $derived(usageCheck.daily.remaining - numMessages);
+	const monthlyRemaining = $derived(usageCheck.monthly.remaining - numMessages);
+	const remaining = $derived(Math.min(dailyRemaining, monthlyRemaining));
+	const limitReached = $derived(dailyRemaining <= monthlyRemaining ? 'daily' : 'monthly');
+
+	const shouldBlock = $derived(!usageCheck.canStartConversation || remaining <= 0);
+	const shouldWarn = $derived(!shouldBlock && remaining <= 5);
 
 	onMount(() => {
 		chat.connect(data.ephemeralKey);
@@ -44,7 +48,7 @@
 
 <div class="h-full flex flex-col bg-gray-50 relative">
 	{#if shouldWarn}
-		<UsageIndicator {usageCheck} mode="warning" />
+		<UsageIndicator {usageCheck} mode="warning" {limitReached} {remaining} />
 	{/if}
 
 	<!-- Chat UI (always rendered) -->
@@ -56,7 +60,7 @@
 	<!-- Blocking overlay (positioned absolutely on top, with backdrop blur) -->
 	{#if shouldBlock}
 		<div class="absolute inset-0">
-			<UsageIndicator {usageCheck} mode="blocking" />
+			<UsageIndicator {usageCheck} mode="blocking" {limitReached} {remaining} />
 		</div>
 	{/if}
 </div>

@@ -11,14 +11,12 @@ export interface PeriodUsage {
 	limit: number;
 	used: number;
 	remaining: number;
-	percent: number;
 }
 
 export interface UsageStats {
 	daily: PeriodUsage;
 	monthly: PeriodUsage;
 	canStartConversation: boolean;
-	limitReached: 'none' | 'daily' | 'monthly';
 }
 
 function getStartOfDayUTC(): string {
@@ -39,24 +37,18 @@ function getStartOfMonthUTC(): string {
 export function limits(rawStats: RawUsageStats, isPremium: boolean): UsageStats {
 	// Premium users have unlimited (very large limit that survives JSON serialization)
 	if (isPremium) {
-		const dailyPercent = (rawStats.dailyUsed / UNLIMITED_MESSAGES) * 100;
-		const monthlyPercent = (rawStats.monthlyUsed / UNLIMITED_MESSAGES) * 100;
-
 		return {
 			daily: {
 				limit: UNLIMITED_MESSAGES,
 				used: rawStats.dailyUsed,
 				remaining: UNLIMITED_MESSAGES,
-				percent: dailyPercent
 			},
 			monthly: {
 				limit: UNLIMITED_MESSAGES,
 				used: rawStats.monthlyUsed,
 				remaining: UNLIMITED_MESSAGES,
-				percent: monthlyPercent
 			},
 			canStartConversation: true,
-			limitReached: 'none'
 		};
 	}
 
@@ -64,34 +56,21 @@ export function limits(rawStats: RawUsageStats, isPremium: boolean): UsageStats 
 	const dailyRemaining = Math.max(0, FREE_DAILY_MESSAGE_LIMIT - rawStats.dailyUsed);
 	const monthlyRemaining = Math.max(0, FREE_MONTHLY_MESSAGE_LIMIT - rawStats.monthlyUsed);
 
-	const dailyPercent = (rawStats.dailyUsed / FREE_DAILY_MESSAGE_LIMIT) * 100;
-	const monthlyPercent = (rawStats.monthlyUsed / FREE_MONTHLY_MESSAGE_LIMIT) * 100;
-
 	const dailyLimitReached = dailyRemaining <= 0;
 	const monthlyLimitReached = monthlyRemaining <= 0;
-
-	let limitReached: 'none' | 'daily' | 'monthly' = 'none';
-	if (dailyLimitReached) {
-		limitReached = 'daily';
-	} else if (monthlyLimitReached) {
-		limitReached = 'monthly';
-	}
 
 	return {
 		daily: {
 			limit: FREE_DAILY_MESSAGE_LIMIT,
 			used: rawStats.dailyUsed,
 			remaining: dailyRemaining,
-			percent: dailyPercent
 		},
 		monthly: {
 			limit: FREE_MONTHLY_MESSAGE_LIMIT,
 			used: rawStats.monthlyUsed,
 			remaining: monthlyRemaining,
-			percent: monthlyPercent
 		},
 		canStartConversation: !dailyLimitReached && !monthlyLimitReached,
-		limitReached
 	};
 }
 

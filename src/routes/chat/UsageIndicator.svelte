@@ -6,19 +6,20 @@
 	interface Props {
 		usageCheck: UsageStats;
 		mode: 'warning' | 'blocking';
+		limitReached: 'daily' | 'monthly';
+		remaining: number;
 	}
 
-	let { usageCheck, mode }: Props = $props();
+	let { usageCheck, mode, limitReached, remaining }: Props = $props();
 
 	// Warning banner can be dismissed
 	let dismissed = $state(false);
 
-	// Determine which limit was reached
-	const limitType = $derived(usageCheck.limitReached);
+	// Determine which usage stats to display
 	const relevantUsage = $derived(
-		limitType === 'daily' ? usageCheck.daily : usageCheck.monthly
+		limitReached === 'daily' ? usageCheck.daily : usageCheck.monthly
 	);
-	const period = $derived(limitType === 'daily' ? 'today' : 'this month');
+	const period = $derived(limitReached === 'daily' ? 'today' : 'this month');
 </script>
 
 {#if mode === 'warning' && !dismissed}
@@ -29,7 +30,7 @@
 				<span class="text-2xl flex-shrink-0">✨</span>
 				<div class="flex-1 min-w-0">
 					<p class="text-sm font-medium text-primary-900">
-						You're on a roll! Only <span class="font-bold">{relevantUsage.remaining}</span> messages
+						You're on a roll! Only <span class="font-bold">{remaining}</span> messages
 						left {period}.
 					</p>
 					<p class="text-xs text-primary-800 mt-0.5">
@@ -61,7 +62,7 @@
 		<Container class="max-w-md text-center shadow-lg">
 			<div class="text-6xl mb-4">✨</div>
 			<h2 class="text-2xl font-bold text-text-primary mb-2">
-				You've reached your {limitType === 'daily' ? 'daily' : 'monthly'} limit
+				You've reached your {limitReached === 'daily' ? 'daily' : 'monthly'} limit
 			</h2>
 			<p class="text-text-secondary mb-4">
 				You've practiced with <span class="font-semibold">{relevantUsage.used}</span> conversation exchanges {period}
