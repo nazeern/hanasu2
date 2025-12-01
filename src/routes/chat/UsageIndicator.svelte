@@ -8,9 +8,10 @@
 		mode: 'warning' | 'blocking';
 		limitReached: 'daily' | 'monthly';
 		remaining: number;
+		numMessages: number;
 	}
 
-	let { usageCheck, mode, limitReached, remaining }: Props = $props();
+	let { usageCheck, mode, limitReached, remaining, numMessages }: Props = $props();
 
 	// Warning banner can be dismissed
 	let dismissed = $state(false);
@@ -65,7 +66,7 @@
 				You've reached your {limitReached === 'daily' ? 'daily' : 'monthly'} limit
 			</h2>
 			<p class="text-text-secondary mb-4">
-				You've practiced with <span class="font-semibold">{relevantUsage.used}</span> conversation exchanges {period}
+				You've practiced with <span class="font-semibold">{relevantUsage.used + numMessages}</span> conversation exchanges {period}
 				— great progress! Keep the momentum going with unlimited practice.
 			</p>
 

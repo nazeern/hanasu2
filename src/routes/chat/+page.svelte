@@ -48,7 +48,7 @@
 
 <div class="h-full flex flex-col bg-gray-50 relative">
 	{#if shouldWarn}
-		<UsageIndicator {usageCheck} mode="warning" {limitReached} {remaining} />
+		<UsageIndicator {usageCheck} mode="warning" {limitReached} {remaining} {numMessages} />
 	{/if}
 
 	<!-- Chat UI (always rendered) -->
@@ -60,7 +60,7 @@
 	<!-- Blocking overlay (positioned absolutely on top, with backdrop blur) -->
 	{#if shouldBlock}
 		<div class="absolute inset-0">
-			<UsageIndicator {usageCheck} mode="blocking" {limitReached} {remaining} />
+			<UsageIndicator {usageCheck} mode="blocking" {limitReached} {remaining} {numMessages} />
 		</div>
 	{/if}
 </div>
