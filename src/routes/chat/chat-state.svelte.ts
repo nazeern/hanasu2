@@ -1,6 +1,6 @@
 import logger from '$lib/logger';
 import { RealtimeAgent, RealtimeSession } from '@openai/agents-realtime';
-import { toChatMessage } from './utils';
+import { toChatMessage, parseTokenUsage } from './utils';
 import { langInfoList, type LangInfo } from '$lib/constants';
 import type { ParsedWord } from './kuromoji-parser';
 import { getAgentInstructions } from './constants';
@@ -305,13 +305,17 @@ export class Chat implements ChatInterface {
 
 		try {
 			const duration = Date.now() - this.sessionStartTime;
+
+			const usage = parseTokenUsage(this.session.usage);
+
 			const sessionData = {
 				sessionId: this.sessionId,
 				lang: this.langInfo.code,
 				topic: this.prompt,
 				duration: duration,
 				nResponses: this.messages.length,
-				avgResponseDurationMs: this.avgResponseDurationMs
+				avgResponseDurationMs: this.avgResponseDurationMs,
+				usage
 			};
 
 			if (useBeacon && navigator.sendBeacon) {

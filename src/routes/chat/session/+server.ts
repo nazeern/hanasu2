@@ -1,6 +1,8 @@
 import logger from '$lib/logger';
 import { json, error, type RequestHandler } from '@sveltejs/kit';
 import { isString } from '$lib/util';
+import type { ConsolidatedUsage } from '../utils';
+import type { Json } from '../../../database.types';
 
 interface SaveSessionRequest {
 	sessionId: string;
@@ -9,6 +11,7 @@ interface SaveSessionRequest {
 	duration: number; // in milliseconds (will be converted to seconds for database)
 	nResponses: number;
 	avgResponseDurationMs?: number;
+	usage?: ConsolidatedUsage | null;
 }
 
 function isValidSessionRequest(body: any): body is SaveSessionRequest {
@@ -18,7 +21,8 @@ function isValidSessionRequest(body: any): body is SaveSessionRequest {
 		isString(body.topic) &&
 		typeof body.duration === 'number' &&
 		typeof body.nResponses === 'number' &&
-		(body.avgResponseDurationMs === undefined || typeof body.avgResponseDurationMs === 'number')
+		(body.avgResponseDurationMs === undefined || typeof body.avgResponseDurationMs === 'number') &&
+		(body.usage === null || typeof body.usage === 'object')
 	);
 }
 
@@ -35,7 +39,7 @@ export const POST: RequestHandler = async ({ request, locals: { safeGetSession, 
 		return error(400, { message: 'Invalid session data' });
 	}
 
-	const { sessionId, lang, topic, duration, nResponses, avgResponseDurationMs } = body;
+	const { sessionId, lang, topic, duration, nResponses, avgResponseDurationMs, usage } = body;
 
 	// Convert duration from milliseconds to seconds, round, and cap at 10000 seconds (~2.7 hours)
 	const processedDuration = Math.min(Math.round(duration / 1000), 10000);
@@ -56,7 +60,7 @@ export const POST: RequestHandler = async ({ request, locals: { safeGetSession, 
 			n_responses: nResponses,
 			avg_response_duration_ms: processedAvgResponseDuration,
 			chat_messages: null,
-			token_usage: null
+			token_usage: usage as Json,
 		});
 
 		if (dbError) {
