@@ -3,6 +3,7 @@
 	import LanguageIcon from './LanguageIcon.svelte';
 	import Logo from './Logo.svelte';
 	import ProfileIcon from './ProfileIcon.svelte';
+	import FeedbackButton from './FeedbackButton.svelte';
 
 	interface Props {
 		userInitial: string;
@@ -25,6 +26,7 @@
 		<Logo />
 		<div class="flex items-center gap-4">
 			<LanguageIcon {langInfo} />
+			<FeedbackButton />
 			<ProfileIcon {userInitial} {userEmail} {isPremium} />
 		</div>
 	</div>

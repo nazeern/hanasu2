@@ -2,6 +2,7 @@ import type { User } from '@supabase/supabase-js';
 import type { LayoutServerLoad } from './$types';
 import { langInfoList, type LangInfo } from '$lib/constants';
 import { getCustomerSubscriptionStatus } from '$lib/server/polar';
+import { generateCannyHash } from '$lib/server/canny';
 
 function getUserInitial(user: User | null | undefined): string {
 	if (!user) return '?';
@@ -28,6 +29,9 @@ export const load: LayoutServerLoad = async ({ locals: { safeGetSession, supabas
 	// Check subscription status (handles null user gracefully)
 	const subscriptionStatus = await getCustomerSubscriptionStatus(user?.id);
 
+	// Generate Canny SSO hash for authenticated users
+	const cannyHash = user ? generateCannyHash(user.id) : null;
+
 	return {
 		user,
 		cookies: cookies.getAll(),
@@ -36,6 +40,7 @@ export const load: LayoutServerLoad = async ({ locals: { safeGetSession, supabas
 		userEmail: user?.email ?? 'Guest',
 		profile: profile,
 		langInfo: langInfoList.find((lang) => lang.code === profile?.lang),
-		subscriptionStatus
+		subscriptionStatus,
+		cannyHash
 	};
 };

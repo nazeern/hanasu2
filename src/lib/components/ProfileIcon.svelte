@@ -44,8 +44,8 @@
 					class={cn(
 						'inline-flex items-center px-2 py-1 rounded text-xs font-medium',
 						isPremium
-							? 'bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-400'
-							: 'bg-neutral-100 text-neutral-700 dark:bg-neutral-800 dark:text-neutral-400'
+							? 'bg-primary-100 text-primary-700'
+							: 'bg-neutral-100 text-neutral-700'
 					)}
 				>
 					{isPremium ? 'PREMIUM' : 'FREE'}
