@@ -1,4 +1,5 @@
 import type { RealtimeMessageItem } from '@openai/agents-realtime';
+import { OPENAI_REALTIME_PRICING } from '$lib/constants';
 
 type OAIMessage = {
 	text: string;
@@ -81,6 +82,48 @@ export function parseTokenUsage(usage: Usage): ConsolidatedUsage | null {
 			cached: textCached
 		}
 	};
+}
+
+export interface CostCalculation {
+	breakdown: ConsolidatedUsage;
+	totals: {
+		inputTokens: number;
+		outputTokens: number;
+		cachedTokens: number;
+		inputCost: number;
+		outputCost: number;
+		cachedCost: number;
+		totalCost: number;
+	};
+}
+
+export function calculateCost(usage: ConsolidatedUsage): CostCalculation {
+	const breakdown = {
+		audio: {
+			input: usage.audio.input * OPENAI_REALTIME_PRICING.audio.input,
+			output: usage.audio.output * OPENAI_REALTIME_PRICING.audio.output,
+			cached: usage.audio.cached * OPENAI_REALTIME_PRICING.audio.cached,
+		},
+		text: {
+			input: usage.text.input * OPENAI_REALTIME_PRICING.text.input,
+			output: usage.text.output * OPENAI_REALTIME_PRICING.text.output,
+			cached: usage.text.cached * OPENAI_REALTIME_PRICING.text.cached,
+		}
+	};
+
+	const totals = {
+		inputTokens: usage.audio.input + usage.text.input,
+		outputTokens: usage.audio.output + usage.text.output,
+		cachedTokens: usage.audio.cached + usage.text.cached,
+		inputCost: breakdown.audio.input + breakdown.text.input,
+		outputCost: breakdown.audio.output + breakdown.text.output,
+		cachedCost: breakdown.audio.cached + breakdown.text.cached,
+		totalCost: 0
+	};
+
+	totals.totalCost = totals.inputCost + totals.outputCost + totals.cachedCost;
+
+	return { breakdown, totals };
 }
 
 export function toChatMessage(oaiMessage: RealtimeMessageItem): OAIMessage | null {

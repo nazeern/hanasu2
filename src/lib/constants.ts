@@ -88,3 +88,18 @@ export const ja_tags: TagInfo[] = [
 		color: 'bg-primary-600',
 	},
 ]
+
+// OpenAI Realtime API Pricing (as of Dec 2025, USD per unit token)
+// Structure matches ConsolidatedUsage for easier cost calculation
+export const OPENAI_REALTIME_PRICING = {
+	audio: {
+		input: 32.0 / 1_000_000,
+		output: 64.0 / 1_000_000,
+		cached: 0.4 / 1_000_000
+	},
+	text: {
+		input: 4.0 / 1_000_000,
+		output: 16.0 / 1_000_000,
+		cached: 0.4 / 1_000_000
+	}
+} as const;

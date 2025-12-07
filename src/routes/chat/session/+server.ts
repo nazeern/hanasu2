@@ -2,7 +2,9 @@ import logger from '$lib/logger';
 import { json, error, type RequestHandler } from '@sveltejs/kit';
 import { isString } from '$lib/util';
 import type { ConsolidatedUsage } from '../utils';
+import { calculateCost } from '../utils';
 import type { Json } from '../../../database.types';
+import { posthog } from '$lib/server/posthog';
 
 interface SaveSessionRequest {
 	sessionId: string;
@@ -66,6 +68,65 @@ export const POST: RequestHandler = async ({ request, locals: { safeGetSession, 
 		if (dbError) {
 			logger.error({ error: dbError }, 'Failed to save session to database');
 			return error(500, { message: 'Failed to save session' });
+		}
+
+		// Track to PostHog if usage available
+		if (usage) {
+			try {
+				const { breakdown, totals } = calculateCost(usage);
+
+				// https://posthog.com/docs/llm-analytics/installation/manual-capture?tab=Generation
+				posthog.capture({
+					distinctId: user.id,
+					event: '$ai_generation',
+					properties: {
+						// Standard PostHog LLM properties (for dashboards)
+						$ai_trace_id: sessionId,
+						$ai_model: 'gpt-realtime',
+						$ai_provider: 'openai',
+						$ai_input_tokens: totals.inputTokens,
+						$ai_output_tokens: totals.outputTokens,
+						$ai_cache_read_input_tokens: totals.cachedTokens,
+
+						// Cost properties
+						$ai_input_cost_usd: totals.inputCost,
+						$ai_output_cost_usd: totals.outputCost,
+						$ai_total_cost_usd: totals.totalCost,
+						$ai_request_count: nResponses,
+
+						// Custom properties for audio/text breakdown
+						audio_input_tokens: usage.audio.input,
+						audio_output_tokens: usage.audio.output,
+						audio_cached_tokens: usage.audio.cached,
+						text_input_tokens: usage.text.input,
+						text_output_tokens: usage.text.output,
+						text_cached_tokens: usage.text.cached,
+
+						// Cost breakdown by token type
+						audio_input_cost: breakdown.audio.input,
+						audio_output_cost: breakdown.audio.output,
+						audio_cached_cost: breakdown.audio.cached,
+						text_input_cost: breakdown.text.input,
+						text_output_cost: breakdown.text.output,
+						text_cached_cost: breakdown.text.cached,
+
+						// Session metadata
+						session_duration_seconds: processedDuration,
+						response_count: nResponses,
+						avg_response_time_ms: processedAvgResponseDuration,
+						language: lang,
+
+						// Unneeded fields
+						$ai_input: [],
+						$ai_output_choices: []
+					},
+				});
+
+				logger.info({ sessionId, userId: user.id, cost: totals.totalCost }, 'Usage tracked to PostHog');
+			} catch (phError) {
+				logger.error({ error: phError }, 'PostHog tracking failed (non-fatal)');
+				// Don't fail the request if PostHog fails
+			}
 		}
 
 		logger.info('Session save successful')
