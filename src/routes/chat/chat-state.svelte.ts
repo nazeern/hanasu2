@@ -3,7 +3,7 @@ import { RealtimeAgent, RealtimeSession } from '@openai/agents-realtime';
 import { toChatMessage, parseTokenUsage } from './utils';
 import { langInfoList, type LangInfo } from '$lib/constants';
 import type { ParsedWord } from './kuromoji-parser';
-import { getAgentInstructions } from './constants';
+import { getAgentInstructions, SAMPLE_MESSAGES } from './constants';
 
 export type ChatMessage = {
 	text: string;
@@ -77,79 +77,8 @@ export class Chat implements ChatInterface {
 
 		this.messages = [];
 		if (showSampleChat) {
-			// Sample message if chat is disabled
-			this.messages.push({
-				text: 'こんにちは',
-				from: 'agent',
-				id: 'test-message-1',
-				translationLoading: false,
-				status: 'completed',
-				tipsLoading: false,
-				tokensLoading: false
-			});
-			this.messages.push({
-				text: 'よろしくお願う',
-				from: 'user',
-				id: 'test-message-2',
-				translationLoading: false,
-				status: 'completed',
-				tipsLoading: false,
-				tokensLoading: false
-			});
-			this.messages.push({
-				text: '今日はいい天気ですね',
-				from: 'agent',
-				id: 'test-message-3',
-				translationLoading: false,
-				status: 'completed',
-				tipsLoading: false,
-				tokensLoading: false
-			});
-			this.messages.push({
-				text: '本当に！散歩に行きたいです',
-				from: 'user',
-				id: 'test-message-4',
-				translationLoading: false,
-				status: 'completed',
-				tipsLoading: false,
-				tokensLoading: false
-			});
-			this.messages.push({
-				text: 'いいですね。公園に行きますか',
-				from: 'agent',
-				id: 'test-message-5',
-				translationLoading: false,
-				status: 'completed',
-				tipsLoading: false,
-				tokensLoading: false
-			});
-			this.messages.push({
-				text: 'はい、行きましょう',
-				from: 'user',
-				id: 'test-message-6',
-				translationLoading: false,
-				status: 'completed',
-				tipsLoading: false,
-				tokensLoading: false
-			});
-			this.messages.push({
-				text: '何時に出発しますか',
-				from: 'agent',
-				id: 'test-message-7',
-				translationLoading: false,
-				status: 'completed',
-				tipsLoading: false,
-				tokensLoading: false
-			});
-			this.messages.push({
-				text: '二時はどうですか',
-				from: 'user',
-				id: 'test-message-8',
-				translationLoading: false,
-				status: 'completed',
-				tipsLoading: false,
-				tokensLoading: false
-			});
+			// Load sample messages for testing/demo
+			this.messages.push(...SAMPLE_MESSAGES);
 
 			// Tokenize test messages
 			this.messages.forEach((msg, index) => this.tokenizeMessage(index));

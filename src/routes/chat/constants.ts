@@ -34,3 +34,81 @@ export function getAgentInstructions(proficiency: string): string {
 
 	return instructions;
 }
+
+/**
+ * Sample chat messages for testing and demo purposes
+ */
+export const SAMPLE_MESSAGES = [
+	{
+		text: 'こんにちは',
+		from: 'agent' as const,
+		id: 'test-message-1',
+		translationLoading: false,
+		status: 'completed' as const,
+		tipsLoading: false,
+		tokensLoading: false
+	},
+	{
+		text: 'よろしくお願う',
+		from: 'user' as const,
+		id: 'test-message-2',
+		translationLoading: false,
+		status: 'completed' as const,
+		tipsLoading: false,
+		tokensLoading: false
+	},
+	{
+		text: '今日はいい天気ですね',
+		from: 'agent' as const,
+		id: 'test-message-3',
+		translationLoading: false,
+		status: 'completed' as const,
+		tipsLoading: false,
+		tokensLoading: false
+	},
+	{
+		text: '本当に！散歩に行きたいです',
+		from: 'user' as const,
+		id: 'test-message-4',
+		translationLoading: false,
+		status: 'completed' as const,
+		tipsLoading: false,
+		tokensLoading: false
+	},
+	{
+		text: 'いいですね。公園に行きますか',
+		from: 'agent' as const,
+		id: 'test-message-5',
+		translationLoading: false,
+		status: 'completed' as const,
+		tipsLoading: false,
+		tokensLoading: false
+	},
+	{
+		text: 'はい、行きましょう',
+		from: 'user' as const,
+		id: 'test-message-6',
+		translationLoading: false,
+		status: 'completed' as const,
+		tipsLoading: false,
+		tokensLoading: false
+	},
+	{
+		text: '何時に出発しますか',
+		from: 'agent' as const,
+		id: 'test-message-7',
+		translationLoading: false,
+		status: 'completed' as const,
+		tipsLoading: false,
+		tokensLoading: false
+	},
+	{
+		text: '二時はどうですか',
+		from: 'user' as const,
+		id: 'test-message-8',
+		translationLoading: false,
+		status: 'completed' as const,
+		tipsLoading: false,
+		tokensLoading: false
+	}
+];
