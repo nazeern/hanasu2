@@ -11,7 +11,7 @@
 	let { chat, dictionary }: Props = $props();
 </script>
 
-<div class="flex-1 overflow-y-auto px-4 py-6">
+<div class="flex-1 min-h-0 overflow-y-auto px-4 py-6">
 	<div class="max-w-4xl mx-auto">
 		{#each chat.messages as message, index (message.id)}
 			<Message

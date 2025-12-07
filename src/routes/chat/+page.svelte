@@ -46,16 +46,14 @@
 	});
 </script>
 
-<div class="h-full flex flex-col bg-gray-50 relative">
+<div class="h-full flex flex-col bg-gray-50 min-h-0">
 	{#if shouldWarn}
 		<UsageIndicator {usageCheck} mode="warning" {limitReached} {remaining} {numMessages} />
 	{/if}
 
 	<!-- Chat UI (always rendered) -->
-	<div class="flex-1 flex flex-col">
-		<ChatMessages {chat} {dictionary} />
-		<RecordButton {chat} disabled={shouldBlock} />
-	</div>
+	<ChatMessages {chat} {dictionary} />
+	<RecordButton {chat} disabled={shouldBlock} />
 
 	<!-- Blocking overlay (positioned absolutely on top, with backdrop blur) -->
 	{#if shouldBlock}
