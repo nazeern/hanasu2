@@ -61,9 +61,8 @@
 	<!-- Blocking Overlay (100% usage) -->
 	<div class="h-full flex items-center justify-center p-8 bg-gray-50/50 backdrop-blur-[2px]">
 		<Container class="max-w-md text-center shadow-lg">
-			<div class="text-6xl mb-4">✨</div>
-			<h2 class="text-2xl font-bold text-text-primary mb-2">
-				You've reached your {limitReached === 'daily' ? 'daily' : 'monthly'} limit
+			<h2 class="text-xl font-bold text-text-primary mb-2">
+				You've reached your {limitReached === 'daily' ? 'daily' : 'monthly'} limit ✨
 			</h2>
 			<p class="text-text-secondary mb-4">
 				You've practiced with <span class="font-semibold">{relevantUsage.used + numMessages}</span> conversation exchanges {period}

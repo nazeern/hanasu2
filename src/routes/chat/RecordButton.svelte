@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { Chat } from './chat-state.svelte';
 	import { cn } from '$lib/utils/cn';
+	import Microphone from '$lib/icons/Microphone.svelte';
 
 	interface Props {
 		chat: Chat;
@@ -13,8 +14,8 @@
 
 	const buttonClass = $derived(
 		cn(
-			'w-20 h-20 rounded-full flex items-center justify-center text-2xl',
-			'transition-all duration-200 shadow-lg text-white font-semibold',
+			'w-16 h-16 rounded-full flex items-center justify-center',
+			'transition-all duration-200 shadow-lg text-white',
 			isDisabled && 'bg-gray-400 cursor-not-allowed',
 			chat.recording && !disabled && 'bg-red-500 hover:bg-red-600 scale-110',
 			chat.connected && !chat.recording && !disabled && 'bg-blue-500 hover:bg-blue-600 hover:scale-105'
@@ -22,7 +23,7 @@
 	);
 </script>
 
-<div class="flex justify-center py-6">
+<div class="flex justify-center pb-2">
 	<button
 		class={buttonClass}
 		onpointerdown={() => !disabled && chat.startRecording()}
@@ -33,7 +34,7 @@
 		aria-label={chat.recording ? 'Recording' : 'Hold to record'}
 		style="touch-action: manipulation; -webkit-touch-callout: none; user-select: none;"
 	>
-		🎤
+		<Microphone class="w-8 h-8" />
 	</button>
 </div>
 

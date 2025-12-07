@@ -1,5 +1,16 @@
-import type { Actions } from './$types';
+import { redirect } from '@sveltejs/kit';
+import type { Actions, PageServerLoad } from './$types';
 import logger from '$lib/logger';
+
+export const load: PageServerLoad = async ({ locals: { safeGetSession } }) => {
+	const { user } = await safeGetSession();
+
+	if (user) {
+		throw redirect(303, '/dashboard');
+	}
+
+	return {};
+};
 
 export const actions: Actions = {
 	updateLanguage: async (event) => {
