@@ -58,12 +58,12 @@
 	{/if}
 
 	<!-- Plan Name -->
-	<h3 class="text-2xl font-bold text-text-primary mb-2 text-center">{planName}</h3>
+	<h3 class="text-2xl font-bold font-system text-text-primary mb-2 text-center">{planName}</h3>
 
 	<!-- Price -->
 	<div class="mb-6 text-center">
 		<div class="flex items-baseline justify-center gap-1">
-			<span class="text-5xl font-bold text-primary-600">{price}</span>
+			<span class="text-5xl font-bold font-system text-primary-600">{price}</span>
 		</div>
 		<p class="text-sm text-text-secondary mt-1">{billingPeriod}</p>
 		{#if savingsText}

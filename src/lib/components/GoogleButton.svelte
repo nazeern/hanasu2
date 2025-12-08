@@ -69,8 +69,8 @@
 			box-shadow 0.218s;
 		vertical-align: middle;
 		white-space: nowrap;
-		width: 400px;
-		max-width: 400px;
+		width: 350px;
+		max-width: 370px;
 		min-width: min-content;
 	}
 

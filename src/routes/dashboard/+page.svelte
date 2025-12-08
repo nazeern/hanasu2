@@ -16,7 +16,7 @@
 	<Divider class="m-8" />
 
 	<!-- Conversation Prompts Section -->
-	<Message text="START A CONVERSATION" class="mb-4 font-light text-2xl" />
+	<Message text="START A CONVERSATION" class="mb-4 text-2xl" />
 	{#each prompts as prompt}
 		<Link route='/chat?prompt={encodeURIComponent(prompt)}'>
 			{prompt}
@@ -26,7 +26,7 @@
 	<!-- Vocab Section -->
 	{#if nextVocab}
 		<Divider class="m-8" />
-		<Message text="STUDY VOCAB" class="mb-4 font-light text-2xl" />
+		<Message text="STUDY VOCAB" class="mb-4 text-2xl" />
 		<Vocab {nextVocab} hideVocab={true} />
 		<Link route='/study'>
 			Study Vocab

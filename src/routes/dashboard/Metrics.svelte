@@ -24,7 +24,7 @@
 	<!-- Collapsible Header -->
 	<button
 		onclick={() => (expanded = !expanded)}
-		class="mb-6 font-light text-2xl flex items-center gap-2 hover:opacity-70 transition-opacity cursor-pointer"
+		class="mb-6 font-medium text-2xl flex items-center gap-2 hover:opacity-70 transition-opacity cursor-pointer"
 		aria-expanded={expanded}
 		aria-controls="metrics-section"
 	>

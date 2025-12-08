@@ -146,7 +146,7 @@
 		{/if}
 	</Container>
 
-	<div class="mt-3 text-center text-xs text-text-muted">
+	<div class="mt-3 text-center text-sm text-text-muted">
 		This is a simulated demo. Sign up to start real conversations!
 	</div>
 </div>

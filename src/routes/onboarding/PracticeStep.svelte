@@ -1,28 +1,32 @@
 <script lang="ts">
-	import Button from '$lib/components/Button.svelte';
 	import Container from '$lib/components/Container.svelte';
 	import Message from '$lib/components/Message.svelte';
 	import { practiceFrequencyOptions, type PracticeFrequency } from './constants';
 
 	interface Props {
-		onback: () => void;
 		onnext: () => void;
 		selectedFrequency: PracticeFrequency | '';
 	}
 
-	let { onback, onnext, selectedFrequency = $bindable() }: Props = $props();
+	let { onnext, selectedFrequency = $bindable() }: Props = $props();
+
+	function selectFrequency(frequency: PracticeFrequency) {
+		selectedFrequency = frequency;
+		// Auto-advance after selection
+		setTimeout(onnext, 300);
+	}
 </script>
 
-<div class="text-center mb-12">
-	<Message text="How often can you practice?" class="mb-4 font-light text-3xl" />
+<div class="text-center mb-4 md:mb-12">
+	<Message text="How often can you practice?" class="mb-4 text-3xl" />
 	<p class="text-lg text-text-secondary">Choose what works best for you</p>
 </div>
 
-<div class="grid grid-cols-1 gap-4 mb-8">
+<div class="grid grid-cols-1 gap-4">
 	{#each practiceFrequencyOptions as option}
 		<button
 			type="button"
-			onclick={() => (selectedFrequency = option.id)}
+			onclick={() => selectFrequency(option.id)}
 			class="text-left transition-all hover:scale-105 cursor-pointer"
 		>
 			<Container
@@ -35,19 +39,4 @@
 			</Container>
 		</button>
 	{/each}
-</div>
-
-<div class="flex gap-4 justify-center">
-	<Button type="button" variant="secondary" onclick={onback}>
-		Back
-	</Button>
-	<Button
-		type="button"
-		variant="primary"
-		class="px-8"
-		disabled={!selectedFrequency}
-		onclick={onnext}
-	>
-		Next
-	</Button>
 </div>

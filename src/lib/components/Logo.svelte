@@ -8,5 +8,5 @@
 </script>
 
 <a href="/dashboard" aria-label="Hanasu Logo">
-	<p class={cn('text-xl font-semibold', className)}>Hanasu</p>
+	<p class={cn('text-2xl font-bold tracking-wide', className)}>Hanasu</p>
 </a>

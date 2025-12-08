@@ -11,7 +11,7 @@
 	<!-- Hero Section -->
 	<section class="container mx-auto px-4 py-16 md:py-24">
 		<div class="max-w-4xl mx-auto text-center">
-			<h1 class="text-4xl md:text-6xl font-bold text-text-primary mb-6 leading-tight">
+			<h1 class="tracking-tight text-4xl md:text-6xl font-bold text-text-primary mb-6 leading-tight">
 				Learn Japanese Through <span class="text-primary-600">Natural Conversation</span>
 			</h1>
 			<p class="text-xl text-text-secondary mb-8 max-w-2xl mx-auto">

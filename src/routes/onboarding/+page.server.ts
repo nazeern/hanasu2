@@ -3,7 +3,11 @@ import type { Actions, PageServerLoad } from './$types';
 import { practiceFrequencyOptions, type PracticeFrequency } from './constants';
 
 export const load: PageServerLoad = async ({ parent }) => {
-	const { profile } = await parent();
+	const { user, profile } = await parent();
+
+	if (!user) {
+		throw redirect(303, '/login');
+	}
 
 	return {};
 };
