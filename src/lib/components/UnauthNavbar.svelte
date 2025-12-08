@@ -12,21 +12,20 @@
 
 		<!-- Navigation Links -->
 		<div class="flex items-center gap-6">
-			<!-- Pricing Link -->
 			<a
 				href="/pricing"
-				class="text-lg text-text-secondary hover:text-primary-600 transition-colors font-medium hidden sm:block"
+				class="text-lg text-text-secondary hover:text-primary-600 transition-colors font-system font-medium hidden sm:block"
 			>
 				Pricing
 			</a>
 
 			<!-- Auth Buttons -->
-			<div class="flex items-center gap-3">
+			<div class="flex items-center gap-2 sm:gap-3">
 				<a href="/login">
-					<Button variant="ghost" class="bg-neutral-100 hover:bg-neutral-200 text-sm px-4 py-2">Sign In</Button>
+					<Button variant="ghost" class="bg-neutral-100 hover:bg-neutral-200 text-sm px-3.5 py-2 sm:px-4">Sign In</Button>
 				</a>
 				<a href="/signup">
-					<Button variant="primary" class="text-sm px-4 py-2">Get Started</Button>
+					<Button variant="primary" class="text-sm px-3.5 py-2 sm:px-4">Get Started</Button>
 				</a>
 			</div>
 		</div>
