@@ -5,6 +5,7 @@ import type { ConsolidatedUsage } from '../utils';
 import { calculateCost } from '../utils';
 import type { Json } from '../../../database.types';
 import { posthog } from '$lib/server/posthog';
+import { sendEvent } from '$lib/server/loops';
 
 interface SaveSessionRequest {
 	sessionId: string;
@@ -47,12 +48,40 @@ export const POST: RequestHandler = async ({ request, locals: { safeGetSession, 
 	const processedDuration = Math.min(Math.round(duration / 1000), 10000);
 
 	// Round and cap avg_response_duration_ms at database maximum (10000)
-	const processedAvgResponseDuration = avgResponseDurationMs != null
-		? Math.min(Math.round(avgResponseDurationMs), 10000)
-		: null;
+	const processedAvgResponseDuration =
+		avgResponseDurationMs != null ? Math.min(Math.round(avgResponseDurationMs), 10000) : null;
 
+	// Maybe send first conversation event to Loops
 	try {
-		// Insert session into database
+		const { data: existingSessions, error: existingSessionsError } = await supabase
+			.from('sessions')
+			.select('id')
+			.eq('user_id', user.id)
+			.limit(1);
+
+		const isFirstConversation = !existingSessionsError && existingSessions.length === 0;
+		if (isFirstConversation && processedDuration > 6) {
+			await sendEvent({
+				userId: user.id,
+				eventName: 'first_conversation_completed',
+				eventProperties: {
+					duration_minutes: Number((processedDuration / 60).toFixed(1)),
+					topic: topic,
+					language: lang,
+					message_count: nResponses
+				}
+			});
+			logger.info({ userId: user.id }, 'First conversation event sent to Loops');
+		}
+	} catch (loopsError) {
+		logger.error(
+			{ error: loopsError },
+			'Failed to send first conversation event to Loops (non-fatal)'
+		);
+	}
+
+	// Insert session into database
+	try {
 		const { error: dbError } = await supabase.from('sessions').insert({
 			id: sessionId,
 			user_id: user.id,
@@ -62,7 +91,7 @@ export const POST: RequestHandler = async ({ request, locals: { safeGetSession, 
 			n_responses: nResponses,
 			avg_response_duration_ms: processedAvgResponseDuration,
 			chat_messages: null,
-			token_usage: usage as Json,
+			token_usage: usage as Json
 		});
 
 		if (dbError) {
@@ -119,17 +148,20 @@ export const POST: RequestHandler = async ({ request, locals: { safeGetSession, 
 						// Unneeded fields
 						$ai_input: [],
 						$ai_output_choices: []
-					},
+					}
 				});
 
-				logger.info({ sessionId, userId: user.id, cost: totals.totalCost }, 'Usage tracked to PostHog');
+				logger.info(
+					{ sessionId, userId: user.id, cost: totals.totalCost },
+					'Usage tracked to PostHog'
+				);
 			} catch (phError) {
 				logger.error({ error: phError }, 'PostHog tracking failed (non-fatal)');
 				// Don't fail the request if PostHog fails
 			}
 		}
 
-		logger.info('Session save successful')
+		logger.info('Session save successful');
 		return json({ success: true });
 	} catch (err) {
 		logger.error({ error: err }, 'Session save error');
