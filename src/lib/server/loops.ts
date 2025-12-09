@@ -1,8 +1,8 @@
 import { LoopsClient, type ContactProperties } from 'loops';
-import { LOOPS_API_KEY } from '$env/static/private';
+import { LOOPS_SECRET_KEY } from '$env/static/private';
 import logger from '$lib/logger';
 
-const loops = new LoopsClient(LOOPS_API_KEY);
+const loops = new LoopsClient(LOOPS_SECRET_KEY);
 
 interface CreateContactParams {
 	email: string;
