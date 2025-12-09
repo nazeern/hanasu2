@@ -17,36 +17,40 @@ Build email notifications for Hanasu with:
 - No custom code needed - configure drip campaigns in dashboard
 - Handles timing, triggers, and delivery automatically
 
-**Practice Reminders: Custom (Supabase Edge Function + Resend)**
+**Practice Reminders: Custom (Supabase Edge Function + Loops)**
 - Needs complex logic (check if practiced today, respect frequency, calculate streak)
 - Timezone-aware sending (9am local time varies by user)
-- Resend API for sending (3,000 free/month, then $20/50k emails)
-- 95-99% deliverability, webhooks, analytics included
+- Supabase cronjob does all database queries, then sends event to Loops
+- Loops handles email delivery (charged by contacts, not email volume)
 - pg_cron triggers hourly check
 
-### Why Not Use Only One Solution?
+### Revised Architecture: Loops for Everything
 
-**Option 1: Only Loops**
-- ❌ Can't check "did user practice today before sending reminder"
-- ❌ No access to sessions table for streak calculation
-- ❌ Limited custom logic for practice_frequency
+**Original concern:** Can Loops handle practice reminder logic?
+- ❌ Loops can't query our database directly
+- ❌ Loops can't check "did user practice today"
+- ❌ Loops can't calculate streaks or access sessions table
 
-**Option 2: Only Customer.io ($100/mo minimum)**
-- ✅ Could handle everything with custom logic
-- ❌ Expensive for early stage ($100/mo vs free)
-- ❌ Overkill for simple lifecycle emails
+**Solution:** Do the logic in Supabase cronjob, send event to Loops
+- ✅ Cronjob queries database (sessions, vocabulary, profiles)
+- ✅ Cronjob calculates eligibility (practiced today? correct timezone? correct frequency?)
+- ✅ Cronjob calculates personalization data (streak, words_saved, etc.)
+- ✅ Cronjob sends `practice_reminder_due` event to Loops with all data
+- ✅ Loops immediately sends email with personalized properties
 
-**Option 3: All custom (Edge Functions for everything)**
-- ✅ Maximum control
-- ❌ Have to build drip campaign logic from scratch
-- ❌ More code to maintain
-- ❌ Lifecycle emails are commodity - why reinvent?
+**Why this works:**
+- Loops rate limit: **10 requests/second** (~600/min) - more than sufficient
+- Event property limit: **500 characters per value** - our data is tiny (streak: "5", words_saved: "127")
+- Cost: FREE at MVP scale (charged by contacts, not email volume)
+- Simpler: One integration (Loops) instead of two (Loops + Resend)
+- One dashboard for all email analytics
 
-**Hybrid Approach (Recommended)**
-- ✅ Loops handles commodity lifecycle emails (no code)
-- ✅ Custom logic only where needed (practice reminders)
+**Final Architecture: Loops Only**
+- ✅ Lifecycle emails: Configured in Loops dashboard (no code)
+- ✅ Practice reminders: Supabase cronjob + Loops event (custom logic + SaaS delivery)
 - ✅ FREE for MVP (<1k users)
 - ✅ Scales affordably
+- ✅ Simpler than hybrid Resend approach
 
 ## System Architecture
 
@@ -59,27 +63,30 @@ Build email notifications for Hanasu with:
                  │                         │
                  ▼                         ▼
         ┌─────────────────┐      ┌──────────────────┐
-        │ Loops API       │      │ Supabase         │
-        │ (Lifecycle)     │      │ (Practice Data)  │
+        │ SvelteKit App   │      │ Supabase         │
+        │ (Signup flow)   │      │ (Practice Data)  │
         └─────────────────┘      └──────────────────┘
                  │                         │
-                 │                         │
-         Welcome, Tips,            pg_cron (hourly)
-         Re-engagement                     │
+                 │ updateContact()         │ pg_cron (hourly)
+                 │ sendEvent()             │
                  │                         ▼
-                 │                ┌──────────────────┐
-                 │                │ Edge Function    │
-                 │                │ (Check timezone, │
-                 │                │  practice status)│
-                 │                └──────────────────┘
+                 │                ┌──────────────────────────┐
+                 │                │ Edge Function            │
+                 │                │ - Query sessions table   │
+                 │                │ - Check timezone         │
+                 │                │ - Check practice today   │
+                 │                │ - Calculate streak       │
+                 │                │ - Check practice_freq    │
+                 │                └──────────────────────────┘
                  │                         │
-                 │                         ▼
-                 │                ┌──────────────────┐
-                 │                │ Resend API       │
-                 │                │ (Send reminder)  │
-                 │                └──────────────────┘
-                 │                         │
-                 └─────────────────────────┘
+                 │                         │ sendEvent()
+                 │                         │ ('practice_reminder_due')
+                 ▼                         ▼
+        ┌────────────────────────────────────────┐
+        │           Loops API                    │
+        │  - Lifecycle emails (dashboard config) │
+        │  - Practice reminders (event trigger)  │
+        └────────────────────────────────────────┘
                               │
                               ▼
                       User's Inbox
@@ -122,7 +129,12 @@ Add 6 new columns:
 
 ### Create `email_log` table
 Track all sent emails for debugging:
-- `user_id`, `email_type`, `sent_at`, `status`, `resend_id`, `metadata`
+- `user_id` (uuid, foreign key to profiles)
+- `email_type` (text) - e.g., 'practice_reminder', 'lifecycle'
+- `event_name` (text) - e.g., 'practice_reminder_due', 'user_inactive_7_days'
+- `sent_at` (timestamptz) - When email was triggered
+- `status` (text) - 'sent', 'failed', 'skipped'
+- `metadata` (jsonb) - Event properties sent to Loops
 - Used to prevent duplicate sends and track delivery
 
 **Note:** Lifecycle email state tracked by Loops internally, not in our DB.
@@ -146,20 +158,30 @@ Track all sent emails for debugging:
 - `src/routes/auth/callback/+server.ts` - Add user to Loops on signup
 - `src/routes/chat/session/+server.ts` - Send "session_completed" event
 
-### Resend Integration (Practice Reminders)
+### Practice Reminders Integration (Loops)
 1. **Edge Function**: Runs hourly via pg_cron
 2. **Logic**: For each user, check if it's their reminder_time in their timezone
 3. **Eligibility**: Only send if user hasn't practiced today + respects practice_frequency
-4. **Send**: Call Resend API with personalized reminder (includes streak)
+4. **Send**: Call Loops API with `sendEvent('practice_reminder_due', eventProperties)`
 
 **Files to Create:**
-- `src/lib/server/email.ts` - Resend wrapper using Resend SDK
-- `src/lib/server/email-templates/` - HTML email templates (base + practice reminder)
 - `supabase/functions/send-practice-reminders/index.ts` - Edge Function with timezone logic
 
 **Supabase Setup:**
 - pg_cron schedule (hourly): `0 * * * *`
-- Edge Function deployed with secrets (RESEND_API_KEY, CRON_SECRET)
+- Edge Function deployed with secrets (LOOPS_SECRET_KEY, CRON_SECRET)
+
+**Event Properties to Send:**
+- `streak` (number) - Current daily streak
+- `words_saved` (number) - Total vocabulary saved
+- `total_conversation_minutes` (number) - Total practice time
+- `practice_frequency` (string) - User's preference (daily/3x_weekly)
+- `first_name` (string) - For personalization
+
+**Loops Dashboard Setup:**
+- Create Loop: "Practice Reminder"
+- Trigger: "Event received" → `practice_reminder_due`
+- Email template uses event properties for personalization
 
 ### User Settings UI
 Create `/settings` page where users can:
@@ -180,39 +202,42 @@ Create `/settings` page where users can:
 
 | Service | Usage | Cost |
 |---------|-------|------|
-| **Loops** | <1,000 contacts, lifecycle emails | **$0/mo** (free tier) |
-| **Resend** | ~5k practice reminders/mo | **$0/mo** (free 3k/mo) |
+| **Loops** | <1,000 contacts, all emails (lifecycle + practice reminders) | **$0/mo** (free tier) |
 | **Supabase** | Edge Functions, pg_cron | **$0** (included in Pro/Free) |
 | **Total** | | **$0/month** |
 
-**Assumptions:**
-- 500 active users
-- 50% enable practice reminders
-- Daily: 250 emails/day = 7,500/mo
-- 3x weekly: 125 emails/day = 3,750/mo
-- Average: ~5,000 practice reminder emails/month
-- Lifecycle: 4 emails per user = 2,000/mo (one-time per cohort)
-- **Total: ~7,000 emails/month** - exceeds Resend free tier (3k/mo)
+**Why Loops is free regardless of email volume:**
+- Loops charges by **contacts**, not email sends
+- 500 users = 500 contacts = **free tier**
+- Each user can receive unlimited emails (lifecycle + daily reminders)
+- No per-email charges like Resend/SendGrid
 
-**Note:** At ~500 users, you'll need Resend paid plan ($20/mo) once volume exceeds 3k/month. This happens around 300-400 active users with daily reminders enabled.
+**Email Volume (for reference):**
+- 500 active users
+- 50% enable practice reminders (250 users)
+- Daily reminders: 250 emails/day = 7,500/mo
+- Lifecycle: 4 emails per user = 2,000/mo (one-time per cohort)
+- **Total: ~9,500 emails/month** - all covered by Loops free tier
 
 ### Growth Phase (5,000 users)
 
 | Service | Usage | Cost |
 |---------|-------|------|
 | **Loops** | 5,000 contacts | **$49/mo** |
-| **Resend** | ~25k practice reminders/mo | **$20/mo** (50k limit) |
 | **Supabase** | Edge Functions | **$0** (included) |
-| **Total** | | **$69/month** |
+| **Total** | | **$49/month** |
+
+**Savings vs. Resend approach:** $20/month (no Resend subscription needed)
 
 ### Scale (10,000 users)
 
 | Service | Usage | Cost |
 |---------|-------|------|
 | **Loops** | 10,000 contacts | **$99/mo** (estimate) |
-| **Resend** | ~50k practice reminders/mo | **$20/mo** |
 | **Supabase** | Edge Functions | **$0** (included) |
-| **Total** | | **$119/month** |
+| **Total** | | **$99/month** |
+
+**Savings vs. Resend approach:** $20/month (no Resend subscription needed)
 
 ### Alternative: Customer.io at Scale
 
@@ -223,7 +248,7 @@ If you needed more advanced segmentation/analytics:
 | **Customer.io** | 10,000 profiles | **$200/mo** (estimate) |
 | **Total** | | **$200/month** |
 
-**Verdict:** Hybrid approach saves $80+/month at 10k users vs. Customer.io
+**Verdict:** Loops-only approach saves $20/month (vs. Loops+Resend hybrid) and $100+/month (vs. Customer.io)
 
 ## Implementation Phases
 
@@ -242,14 +267,14 @@ If you needed more advanced segmentation/analytics:
 ### Phase 2: Practice Reminders Foundation (Week 2)
 **Goal:** Get practice reminders working (fixed timezone first)
 
-1. Sign up for Resend, verify domain (SPF/DKIM/DMARC)
-2. Create `src/lib/server/email.ts` wrapper using Resend SDK
-3. Create practice reminder email template (React Email or plain HTML)
-4. Create Edge Function (start with UTC-only, no timezone logic yet)
+1. Create practice reminder email template in Loops dashboard
+2. Configure Loop: Trigger "Event received" → `practice_reminder_due`
+3. Create Edge Function (start with UTC-only, no timezone logic yet)
+4. Edge Function logic: Query users, calculate eligibility, send Loops event
 5. Setup pg_cron hourly schedule
 6. Test manually with your account
 
-**Deliverable:** Practice reminders working at 9am UTC using Resend
+**Deliverable:** Practice reminders working at 9am UTC using Loops
 
 ### Phase 3: Timezone Support (Week 3)
 **Goal:** Per-user timezone for reminders
@@ -266,8 +291,8 @@ If you needed more advanced segmentation/analytics:
 
 1. Create `/settings` page with email preferences
 2. Add unsubscribe handler
-3. Display recent emails in settings
-4. Setup Resend webhooks for delivery tracking
+3. Display recent emails in settings (query email_log table)
+4. Monitor Loops analytics for delivery tracking
 5. Add link to settings from dashboard/navbar
 6. Run full end-to-end test
 
@@ -291,13 +316,13 @@ If you needed more advanced segmentation/analytics:
 ## Risk Mitigation
 
 **What if Loops goes down?**
-- Lifecycle emails fail gracefully
-- Practice reminders unaffected
-- Users still get core value (practice reminders)
+- All emails fail gracefully (lifecycle + practice reminders)
+- No data loss - events are queued by Edge Function
+- Retry logic can be added to Edge Function
 
 **What if too many emails sent (bug)?**
 - email_log prevents duplicates (check sent_at today)
-- Resend has rate limits (won't bankrupt you)
+- Loops has rate limits (10 req/sec) - protects against runaway loops
 - Can pause pg_cron immediately if needed
 
 **What if timezone logic breaks?**
@@ -305,41 +330,133 @@ If you needed more advanced segmentation/analytics:
 - Still functional, just wrong time for some users
 - email_log metadata includes timezone for debugging
 
+**What if rate limit is hit?**
+- Edge Function can throttle to stay under 10 req/sec
+- Batch processing with delays between API calls
+- Monitor x-ratelimit-remaining header
+
 ## Success Metrics
 
-Track in PostHog/Analytics:
-- **Email open rates** (via Resend/Loops)
+Track in PostHog/Analytics and Loops Dashboard:
+- **Email open rates** (via Loops analytics)
 - **Click-through rates** (CTR to /chat from emails)
 - **Practice conversion**: % of reminder recipients who practice within 2 hours
 - **Re-engagement effectiveness**: % of "we miss you" recipients who return
 - **Unsubscribe rate** (should be <2%)
+- **Delivery rate** (via Loops dashboard)
 
-## Resend Setup Checklist
+## Implementation Summary for Practice Reminders
 
-**Initial Setup:**
-1. Create Resend account at [resend.com](https://resend.com)
-2. Verify domain ownership (add DNS records for SPF, DKIM, DMARC)
-3. Generate API key from dashboard
-4. Install SDK: `pnpm add resend`
+### Architecture Decision: Loops-Only (Revised 2024-12-09)
 
-**Configuration:**
-- Free tier: 3,000 emails/month (1-day log retention)
-- Paid tier: $20/month for 50,000 emails (3-month log retention)
-- Upgrade when volume exceeds 3k/month (around 300-400 active users)
+**Original Plan:** Supabase Edge Function + Resend for practice reminders
+**Revised Plan:** Supabase Edge Function + Loops for practice reminders
 
-**Features Available:**
-- ✅ 95-99% deliverability with dedicated infrastructure
-- ✅ Webhooks for bounce/complaint tracking
-- ✅ Analytics dashboard (opens, clicks, bounces)
-- ✅ Region-based sending (reduce latency)
-- ✅ React Email support for templates
+**Why we changed:**
+1. **Loops rate limits are sufficient** - 10 req/sec (~600/min) handles all scenarios
+2. **Payload limits are fine** - 500 chars per value, our data is tiny
+3. **Cost savings** - $20/month saved by not needing Resend
+4. **Simpler architecture** - One integration (Loops) instead of two
+5. **One dashboard** - All email analytics in Loops
+
+### Implementation Checklist (Ready for Tomorrow)
+
+**1. Database Schema Updates**
+- [ ] Add `email_practice_reminders` (boolean) to profiles table
+- [ ] Add `timezone` (text) to profiles table - IANA identifier
+- [ ] Add `reminder_time` (integer 0-23) to profiles table
+- [ ] Create `email_log` table for tracking sent emails
+- [ ] Add index on profiles(email_practice_reminders, timezone, reminder_time)
+
+**2. Supabase Edge Function**
+- [ ] Create `supabase/functions/send-practice-reminders/index.ts`
+- [ ] Query logic: Find users where local hour === reminder_time
+- [ ] Eligibility check: No session today (check sessions.created_at)
+- [ ] Eligibility check: Respect practice_frequency (daily vs 3x_weekly)
+- [ ] Calculate personalization data: streak, words_saved, total_conversation_minutes
+- [ ] Call Loops `sendEvent('practice_reminder_due', eventProperties)`
+- [ ] Log to email_log table (prevent duplicates)
+- [ ] Deploy with secrets: LOOPS_SECRET_KEY, CRON_SECRET
+
+**3. pg_cron Schedule**
+- [ ] Setup hourly cron: `0 * * * *`
+- [ ] Invoke Edge Function URL with CRON_SECRET header
+- [ ] Test with manual invocation first
+
+**4. Loops Dashboard**
+- [ ] Create Loop: "Practice Reminder"
+- [ ] Trigger: "Event received" → `practice_reminder_due`
+- [ ] Email template with event properties:
+  - `{{streak}}` - Current daily streak
+  - `{{words_saved}}` - Total vocabulary saved
+  - `{{total_conversation_minutes}}` - Total practice time
+  - `{{first_name}}` - User's first name
+- [ ] Use plain text, conversational tone (avoid Promotions tab)
+
+**5. Testing Strategy**
+- [ ] Add `is_test_user` boolean to profiles
+- [ ] Filter Edge Function to only send to test users initially
+- [ ] Manually test with your own account in multiple timezones
+- [ ] Verify email_log prevents duplicates
+- [ ] Check Loops analytics for delivery
+
+### Key Technical Details
+
+**Timezone Calculation Logic:**
+```typescript
+// For each user in profiles where email_practice_reminders = true
+const userLocalHour = DateTime.now().setZone(user.timezone).hour;
+if (userLocalHour === user.reminder_time) {
+  // Check eligibility and send event to Loops
+}
+```
+
+**Event Properties Format:**
+```typescript
+{
+  userId: user.id,
+  eventName: 'practice_reminder_due',
+  eventProperties: {
+    streak: 5,
+    words_saved: 127,
+    total_conversation_minutes: 45,
+    practice_frequency: 'daily',
+    first_name: 'John'
+  }
+}
+```
+
+**Rate Limiting:**
+- Process users in batches
+- Throttle to stay under 10 req/sec
+- Use Promise.all for parallel database queries
+- Sequential Loops API calls with delays if needed
+
+### Files Already Implemented
+
+✅ `src/lib/server/loops.ts` - Loops API wrapper (exists)
+✅ `src/routes/auth/callback/+server.ts` - User signup to Loops (exists)
+✅ `src/routes/chat/session/+server.ts` - Session events to Loops (exists)
+
+### Current Status
+
+**Lifecycle emails:** ✅ Implemented
+- Welcome email (immediate)
+- First conversation completed email
+- Working on: 7-day re-engagement email
+
+**Practice reminders:** ⏳ Not started yet
+- Database schema changes needed
+- Edge Function needs to be created
+- Loops dashboard needs configuration
 
 ## Sources
 
-- [Resend pricing and features](https://resend.com/pricing)
+- [Loops API Introduction](https://loops.so/docs/api-reference/intro) - Rate limits documentation
+- [Loops Event Properties](https://loops.so/docs/events/properties) - Payload size limits
+- [Loops vs Customer.io comparison](https://zapier.com/blog/best-drip-email-marketing-apps/)
 - [Email deliverability benchmarks](https://www.emailtooltester.com/en/blog/email-deliverability-statistics/)
 - [Best transactional email services 2025](https://www.emailtooltester.com/en/blog/best-transactional-email-service/)
-- [Loops vs Customer.io comparison](https://zapier.com/blog/best-drip-email-marketing-apps/)
 - [Timezone storage best practices](https://softwareengineering.stackexchange.com/questions/196156/what-is-the-best-practice-for-saving-timezones-in-the-database)
 - [Supabase Edge Functions scheduling](https://supabase.com/docs/guides/functions/schedule-functions)
 - [Customer.io timezone matching](https://docs.customer.io/journeys/timezone-match/)
