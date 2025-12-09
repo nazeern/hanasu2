@@ -17,7 +17,7 @@
 	}
 
 	let { metrics }: Props = $props();
-	let expanded = $state(true);
+	let expanded = $state(false);
 </script>
 
 <div class="w-full">
@@ -39,8 +39,14 @@
 	</button>
 
 	<!-- Metrics Cards -->
-	{#if expanded}
-		<div id="metrics-section" class="w-full flex flex-col gap-4">
+	<div id="metrics-section" class="w-full flex flex-col gap-4">
+		<MetricCard
+			label="Conversation Time"
+			current={metrics.conversationTime.current}
+			goal={metrics.conversationTime.goal}
+			unit="min"
+		/>
+		{#if expanded}
 			<MetricCard
 				label="Words Saved"
 				current={metrics.wordsSaved.current}
@@ -48,17 +54,11 @@
 				unit="words"
 			/>
 			<MetricCard
-				label="Conversation Time"
-				current={metrics.conversationTime.current}
-				goal={metrics.conversationTime.goal}
-				unit="min"
-			/>
-			<MetricCard
 				label="Daily Streak"
 				current={metrics.dailyStreak.current}
 				goal={metrics.dailyStreak.goal}
 				unit="days"
 			/>
-		</div>
-	{/if}
+		{/if}
+	</div>
 </div>

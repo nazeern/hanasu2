@@ -13,7 +13,7 @@
 	<!-- Metrics Section -->
 	<Metrics {metrics} />
 
-	<Divider class="m-8" />
+	<div class='my-8'></div>
 
 	<!-- Conversation Prompts Section -->
 	<Message text="START A CONVERSATION" class="mb-4 text-2xl" />
