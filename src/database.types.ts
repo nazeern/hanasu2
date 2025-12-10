@@ -49,6 +49,7 @@ export type Database = {
           practice_frequency: string
           proficiency: string
           stripe_id: string | null
+          timezone: string
           updated_at: string | null
         }
         Insert: {
@@ -61,6 +62,7 @@ export type Database = {
           practice_frequency?: string
           proficiency?: string
           stripe_id?: string | null
+          timezone?: string
           updated_at?: string | null
         }
         Update: {
@@ -73,6 +75,7 @@ export type Database = {
           practice_frequency?: string
           proficiency?: string
           stripe_id?: string | null
+          timezone?: string
           updated_at?: string | null
         }
         Relationships: []

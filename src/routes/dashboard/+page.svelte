@@ -1,12 +1,39 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import Divider from '$lib/components/Divider.svelte';
 	import Message from '$lib/components/Message.svelte';
 	import Link from './Link.svelte';
 	import Vocab from './Vocab.svelte';
 	import Metrics from './Metrics.svelte';
+	import logger from '$lib/logger';
 
 	let { data, form } = $props();
-	let { prompts, nextVocab, metrics } = $derived(data);
+	let { prompts, nextVocab, metrics, profile } = $derived(data);
+
+	async function detectAndUpdateTimezone() {
+		if (!profile.timezone || profile.timezone === 'UTC') {
+			try {
+				const detectedTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+				const response = await fetch('/api/timezone', {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({ timezone: detectedTimezone })
+				});
+
+				if (!response.ok) {
+					const error = await response.json();
+					logger.warn('Failed to update timezone:', error);
+				}
+			} catch (error) {
+				logger.warn('Failed to update timezone:', error);
+			}
+		}
+	}
+
+	onMount(() => {
+		detectAndUpdateTimezone();
+	});
 </script>
 
 <div class="mx-auto w-full max-w-2xl flex flex-col items-center my-24 px-4">
