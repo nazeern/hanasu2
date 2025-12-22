@@ -25,7 +25,6 @@
 	<div class="flex justify-between max-w-7xl mx-auto p-4">
 		<Logo />
 		<div class="flex items-center gap-4">
-			<LanguageIcon {langInfo} />
 			<FeedbackButton />
 			<ProfileIcon {userInitial} {userEmail} {isPremium} />
 		</div>
