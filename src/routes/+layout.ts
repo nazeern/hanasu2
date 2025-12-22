@@ -31,8 +31,34 @@ export const load: LayoutLoad = async ({ fetch, data, depends }) => {
 			api_host: '/relay-HxVI',
 			ui_host: 'https://us.posthog.com',
 			defaults: '2025-05-24',
-			person_profiles: 'identified_only' // or 'always' to create profiles for anonymous users as well
+			person_profiles: 'identified_only', // or 'always' to create profiles for anonymous users as well
+
+			// Cost optimization: disable autocapture and unnecessary features
+			autocapture: false,
+			capture_pageview: true,
+			capture_pageleave: false,
+			capture_performance: false,
+
+			// Disable session recording by default (prevents bot recordings)
+			disable_session_recording: true,
+
+			// Session replay: record only logged-in users to stay within 5K/month limit
+			session_recording: {
+				maskAllInputs: true, // Mask form inputs for privacy
+				recordCrossOriginIframes: false // Don't record third-party content
+			}
 		});
+
+		// Identify user and start recording for logged-in users only (not bots)
+		if (data.user) {
+			posthog.identify(data.user.id, {
+				email: data.user.email,
+				name: data.user.user_metadata?.name ?? data.profile?.name
+			});
+
+			// Start session recording only for authenticated users
+			posthog.startSessionRecording();
+		}
 
 		// Initialize Canny for logged-in users with secure SSO hash
 		if (data.user && data.cannyHash) {
