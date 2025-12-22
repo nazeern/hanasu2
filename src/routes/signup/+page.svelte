@@ -20,7 +20,7 @@
 	<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 </svelte:head>
 
-<div class="flex items-center justify-center w-full h-full">
+<div class="flex items-start justify-center w-full min-h-full overflow-y-auto py-4">
 	<div class="w-96 p-4 flex flex-col items-center gap-4">
 		<Welcome />
 		<OAuth />
@@ -32,6 +32,16 @@
 				aria-label="Link to Login Page"
 				class="font-bold text-primary-600">Log in here</a
 			>
+		</p>
+		<p class="mt-8 text-xs text-text-secondary text-center">
+			By signing up, you agree to our
+			<a href="/terms" class="text-primary-600 hover:text-primary-700 underline" target="_blank"
+				>Terms</a
+			>
+			and
+			<a href="/privacy" class="text-primary-600 hover:text-primary-700 underline" target="_blank"
+				>Privacy Policy</a
+			>.
 		</p>
 	</div>
 </div>
