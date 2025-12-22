@@ -5,8 +5,8 @@
 </script>
 
 <svelte:head>
-	<title>Privacy Policy - Hanasu</title>
-	<meta name="description" content="Privacy policy for Hanasu language learning platform" />
+	<title>Terms of Service - Hanasu</title>
+	<meta name="description" content="Terms of Service for Hanasu language learning platform" />
 </svelte:head>
 
 <div class="mx-auto max-w-4xl px-6 py-12">
