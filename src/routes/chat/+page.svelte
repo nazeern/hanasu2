@@ -6,6 +6,9 @@
 	import RecordButton from './RecordButton.svelte';
 	import DictionaryDrawer from './DictionaryDrawer.svelte';
 	import UsageIndicator from './UsageIndicator.svelte';
+	import CompletionModal from './CompletionModal.svelte';
+	import CompleteButton from './CompleteButton.svelte';
+	import Spinner from '$lib/icons/Spinner.svelte';
 
 	let { data } = $props();
 
@@ -46,21 +49,35 @@
 	});
 </script>
 
-<div class="h-full flex flex-col bg-gray-50 min-h-0">
-	{#if shouldWarn}
-		<UsageIndicator {usageCheck} mode="warning" {limitReached} {remaining} {numMessages} />
-	{/if}
-
-	<!-- Chat UI (always rendered) -->
-	<ChatMessages {chat} {dictionary} />
-	<RecordButton {chat} disabled={shouldBlock} />
-
-	<!-- Blocking overlay (positioned absolutely on top, with backdrop blur) -->
-	{#if shouldBlock}
-		<div class="absolute inset-0">
-			<UsageIndicator {usageCheck} mode="blocking" {limitReached} {remaining} {numMessages} />
+<div class="h-full flex flex-col bg-gray-50 min-h-0 relative">
+	{#if chat.state === 'loading'}
+		<div class="size-full flex flex-col justify-center items-center gap-4">
+			<Spinner class="w-12 h-12" />
+			<p class="text-gray-600">Connecting to chat...</p>
 		</div>
+	{:else}
+		<!-- Chat UI -->
+		{#if shouldWarn}
+			<UsageIndicator {usageCheck} mode="warning" {limitReached} {remaining} {numMessages} />
+		{/if}
+
+		<ChatMessages {chat} {dictionary} />
+		<RecordButton {chat} disabled={shouldBlock} />
+
+		<!-- Complete button (bottom right) -->
+		<CompleteButton {chat} />
+
+		<!-- Blocking overlay (positioned absolutely on top, with backdrop blur) -->
+		{#if shouldBlock}
+			<div class="absolute inset-0">
+				<UsageIndicator {usageCheck} mode="blocking" {limitReached} {remaining} {numMessages} />
+			</div>
+		{/if}
 	{/if}
 </div>
 
 <DictionaryDrawer {dictionary} />
+
+{#if chat.state === 'complete'}
+	<CompletionModal {chat} />
+{/if}

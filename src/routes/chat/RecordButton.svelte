@@ -10,7 +10,7 @@
 
 	let { chat, disabled = false }: Props = $props();
 
-	const isDisabled = $derived(!chat.connected || disabled);
+	const isDisabled = $derived(chat.state !== 'connected' || disabled);
 
 	const buttonClass = $derived(
 		cn(
@@ -18,7 +18,7 @@
 			'transition-all duration-200 shadow-lg text-white',
 			isDisabled && 'bg-gray-400 cursor-not-allowed',
 			chat.recording && !disabled && 'bg-red-500 hover:bg-red-600 scale-110',
-			chat.connected && !chat.recording && !disabled && 'bg-blue-500 hover:bg-blue-600 hover:scale-105'
+			chat.state === 'connected' && !chat.recording && !disabled && 'bg-blue-500 hover:bg-blue-600 hover:scale-105'
 		)
 	);
 </script>
@@ -38,7 +38,7 @@
 	</button>
 </div>
 
-{#if !chat.connected}
+{#if chat.state === 'loading'}
 	<p class="text-center text-sm text-gray-600 pb-2">Connecting...</p>
 {:else if chat.recording}
 	<p class="text-center text-sm text-red-600 pb-2 font-medium">Recording... Release to send</p>

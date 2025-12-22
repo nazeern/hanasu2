@@ -18,12 +18,15 @@ export type ChatMessage = {
 	tokensLoading: boolean;
 };
 
+export type ChatState = 'loading' | 'connected' | 'complete';
+
 interface ChatInterface {
 	prompt: string;
 	langInfo: LangInfo;
-	connected: boolean;
 	messages: ChatMessage[];
 	recording: boolean;
+	state: ChatState;
+	avgResponseDurationMs?: number;
 	connect(ephemeralKey?: string, initialPrompt?: string): Promise<boolean>;
 	close(): void;
 	translate(messageIndex: number): Promise<void>;
@@ -38,21 +41,23 @@ export class Chat implements ChatInterface {
 	private sessionId: string;
 	private sessionStartTime: number;
 	private lastUserMessageStartTime?: number;
-	private avgResponseDurationMs?: number;
 
 	prompt: string;
 	langInfo: LangInfo;
-	connected = $state<boolean>(false);
+	avgResponseDurationMs?: number;
 	messages = $state<ChatMessage[]>([]);
 	recording = $state<boolean>(false);
+	state = $state<ChatState>('loading');
+
+	get sessionDuration(): number {
+		return Date.now() - this.sessionStartTime;
+	}
 
 	constructor(langCode: string, showSampleChat: boolean, prompt: string, sessionId: string, proficiency: string = 'advanced') {
 		this.sessionId = sessionId;
 		this.sessionStartTime = Date.now();
 		this.prompt = prompt;
 		this.langInfo = langInfoList.find((lang) => lang.code === langCode) || langInfoList[0];
-
-		this.connected = false;
 
 		const agent = new RealtimeAgent({
 			name: 'Assistant',
@@ -77,6 +82,8 @@ export class Chat implements ChatInterface {
 
 		this.messages = [];
 		if (showSampleChat) {
+			this.state = 'connected';
+
 			// Load sample messages for testing/demo
 			this.messages.push(...SAMPLE_MESSAGES);
 
@@ -118,7 +125,7 @@ export class Chat implements ChatInterface {
 		if (!ephemeralKey) {
 			return false;
 		}
-		if (this.connected) {
+		if (this.state === 'connected') {
 			logger.warn('Chat session already connected, ignoring duplicate connect call');
 			return true;
 		}
@@ -140,7 +147,7 @@ export class Chat implements ChatInterface {
 			// Start with microphone muted to prevent automatic audio capture
 			this.session.mute(true);
 
-			this.connected = true;
+			this.state = 'connected';
 			return true;
 		} catch {
 			logger.error('Failed to connect to OpenAI Realtime session');
@@ -149,12 +156,13 @@ export class Chat implements ChatInterface {
 	}
 
 	close(): void {
-		if (!this.connected) {
+		if (this.state !== 'connected') {
 			return;
 		}
 		// Save session before closing
 		this.saveSession();
 		this.session.close();
+		this.state = 'complete';
 	}
 
 	async translate(messageIndex: number): Promise<void> {
@@ -282,7 +290,7 @@ export class Chat implements ChatInterface {
 
 	async saveSession(useBeacon: boolean = false): Promise<void> {
 		// Don't save if we never connected
-		if (!this.connected) {
+		if (this.state === 'loading') {
 			return;
 		}
 
