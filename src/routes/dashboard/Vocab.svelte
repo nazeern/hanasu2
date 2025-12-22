@@ -26,15 +26,15 @@
 
 <Container class={cn('relative w-full flex flex-col items-center mb-4 lg:px-12', borderClass)}>
 	{#if !hideWord}
-		<p class="mt-8 mb-4 text-3xl">{nextVocab.word}</p>
+		<p class="mt-8 mb-4 text-3xl break-all text-center">{nextVocab.word}</p>
 	{/if}
-	<div class="flex items-center gap-1 mb-1">
+	<div class="flex items-center gap-1 mb-1 flex-wrap justify-center">
 		{#each nextVocab.featured as tag}
 			<Tag {tag} />
 		{/each}
 	</div>
 	{#if !hideVocab}
-		<div class="flex flex-col gap-2">
+		<div class="flex flex-col gap-2 w-full">
 			{#each nextVocab.definitions as definition, i}
 				<Definition {definition} index={i} {hideWord} />
 			{/each}
