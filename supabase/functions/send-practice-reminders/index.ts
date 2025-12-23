@@ -15,30 +15,30 @@ const TEST_IDS = [
 function timezoneAtHour(timezone, hour) {
 	const now = TEST_DATETIME ? Temporal.Instant.from(TEST_DATETIME) : Temporal.Now.instant()
 
-  try {
-    const timezonedDatetime = now.toZonedDateTimeISO(timezone)
-    return timezonedDatetime.hour == hour
-  } catch (error) {
-    console.error(`invalid timezone: ${timezone}`, error)
-  }
+	try {
+		const timezonedDatetime = now.toZonedDateTimeISO(timezone)
+		return timezonedDatetime.hour == hour
+	} catch (error) {
+		console.error(`invalid timezone: ${timezone}`, error)
+	}
 }
 
 export class AudienceRepository {
-  constructor(private supabase, private sendTimezones) {}
+	constructor(private supabase, private sendTimezones) { }
 
 	async getDailyAudience() {
 		const { data } = await this.supabase
 			.from('profiles')
 			.select(`
 				id,
-        notify,
-        timezone,
-        practice_frequency,
-        name
-      `)
+				notify,
+				timezone,
+				practice_frequency,
+				name
+			`)
 			.eq('practice_frequency', 'daily')
-      .in('timezone', this.sendTimezones);
-		return data
+			.in('timezone', this.sendTimezones);
+		return data.map(user => ({ ...user, eventName: 'practice_reminder_due' }))
 	}
 
 	async get2DayAudience() {
@@ -78,7 +78,7 @@ export class AudienceRepository {
 			// Include if latest session is older than 2 days (but within 3 days)
 			if (latestSession < twoDaysAgo) {
 				const { sessions, ...userData } = user;
-				audience.push(userData);
+				audience.push({ ...userData, eventName: 'practice_reminder_due' });
 			}
 		}
 
@@ -122,7 +122,51 @@ export class AudienceRepository {
 			// Include if latest session is older than 7 days (but within 8 days)
 			if (latestSession < sevenDaysAgo) {
 				const { sessions, ...userData } = user;
-				audience.push(userData);
+				audience.push({ ...userData, eventName: 'practice_reminder_due' });
+			}
+		}
+
+		return audience;
+	}
+
+	async get9DayInactiveAudience() {
+		const now = TEST_DATETIME ? new Date(TEST_DATETIME) : new Date()
+		const nineDaysAgo = new Date(now);
+		nineDaysAgo.setDate(now.getDate() - 9);
+
+		const tenDaysAgo = new Date(now);
+		tenDaysAgo.setDate(now.getDate() - 10);
+
+		const { data } = await this.supabase
+			.from('profiles')
+			.select(`
+				id,
+				notify,
+				timezone,
+				practice_frequency,
+				name,
+				sessions(
+					created_at
+				)
+			`)
+			.neq('practice_frequency', 'never')
+			.in('timezone', this.sendTimezones)
+			.gte('sessions.created_at', tenDaysAgo.toISOString());
+
+		const audience = [];
+		for (const user of data) {
+			if (!user.sessions || user.sessions.length === 0) {
+				continue; // No sessions in last 10 days, skip
+			}
+
+			const latestSession = new Date(
+				Math.max(...user.sessions.map((s) => new Date(s.created_at)))
+			);
+
+			// Include if latest session is older than 9 days (but within 10 days)
+			if (latestSession < nineDaysAgo) {
+				const { sessions, ...userData } = user;
+				audience.push({ ...userData, eventName: 'reactivation' });
 			}
 		}
 
@@ -159,20 +203,20 @@ Deno.serve(async (req) => {
 			.from('profiles')
 			.select('timezone')
 			.neq('practice_frequency', 'never');
-    const uniqueTimezones = [...new Set(timezoneData.map(record => record.timezone))]
-    const sendTimezones = uniqueTimezones.filter((tz) => timezoneAtHour(tz, 20))
+		const uniqueTimezones = [...new Set(timezoneData.map(record => record.timezone))]
+		const sendTimezones = uniqueTimezones.filter((tz) => timezoneAtHour(tz, 20))
 
-		let audience = []  // User IDs to send to
 		const audienceRepo = new AudienceRepository(supabase, sendTimezones)
 
-		const [daily, threeXWeekly, weekly] = await Promise.all([
+		const [daily, threeXWeekly, weekly, nineDayInactive] = await Promise.all([
 			audienceRepo.getDailyAudience(),
 			audienceRepo.get2DayAudience(),
-			audienceRepo.getWeeklyAudience()
+			audienceRepo.getWeeklyAudience(),
+			audienceRepo.get9DayInactiveAudience()
 		])
-		audience.push(...daily)
-		audience.push(...threeXWeekly)
-		audience.push(...weekly)
+
+		// Combine all audiences (each user has eventName property)
+		let audience = [...daily, ...threeXWeekly, ...weekly, ...nineDayInactive]
 
 		if (DRY_RUN && TEST_IDS.length) {
 			audience = audience.filter((user) => TEST_IDS.includes(user.id))
@@ -189,10 +233,9 @@ Deno.serve(async (req) => {
 			// Send batch concurrently
 			const promises = batch.map(async (user) => {
 				try {
-					
 					await loops.sendEvent({
 						userId: user.id,
-						eventName: 'practice_reminder_due',
+						eventName: user.eventName,
 						eventProperties: {
 							firstName: user.name ? user.name.split(' ')[0] : null,
 							timezone: user.timezone,
