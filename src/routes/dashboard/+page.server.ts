@@ -90,7 +90,7 @@ export const load: PageServerLoad = async ({ parent, locals: { supabase, safeGet
 	return {
 		email: user.email,
 		profile: profile,
-		prompts: getRandomPrompts(3),
+		prompts: getRandomPrompts(3, profile.learning_goal),
 		nextVocab,
 		metrics
 	};
