@@ -1,6 +1,6 @@
 import { redirect, fail } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
-import { practiceFrequencyOptions, type PracticeFrequency } from './constants';
+import { practiceFrequencyOptions, goals, type PracticeFrequency } from './constants';
 
 export const load: PageServerLoad = async ({ parent }) => {
 	const { user, profile } = await parent();
@@ -22,6 +22,10 @@ export const actions: Actions = {
 		const formData = await request.formData();
 		const proficiencyValue = formData.get('proficiency') as string | null;
 		const proficiency = proficiencyValue && proficiencyValue.trim() !== '' ? proficiencyValue : undefined;
+
+		const learningGoalValue = formData.get('learning_goal') as string | null;
+		const validGoals = goals.map((opt) => opt.id);
+		const learning_goal = learningGoalValue && validGoals.includes(learningGoalValue) ? learningGoalValue : undefined;
 
 		const practiceFrequencyValue = formData.get('practice_frequency') as string | null;
 		const validFrequencies = practiceFrequencyOptions.map((opt) => opt.id);
@@ -49,6 +53,7 @@ export const actions: Actions = {
 			.from('profiles')
 			.update({
 				experienced: experiencedArray,
+				learning_goal: learning_goal,
 				proficiency: proficiency,
 				practice_frequency: practice_frequency
 			})

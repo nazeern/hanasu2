@@ -12,11 +12,12 @@
 
 	interface Props {
 		onback: () => void;
+		selectedGoal: string;
 		selectedProficiency: string;
 		selectedFrequency: string;
 	}
 
-	let { onback, selectedProficiency, selectedFrequency }: Props = $props();
+	let { onback, selectedGoal, selectedProficiency, selectedFrequency }: Props = $props();
 
 	// Generate temporary session ID for onboarding demo
 	const tempSessionId = crypto.randomUUID();
@@ -77,6 +78,7 @@
 		};
 	}}
 >
+	<input type="hidden" name="learning_goal" value={selectedGoal} />
 	<input type="hidden" name="proficiency" value={selectedProficiency} />
 	<input type="hidden" name="practice_frequency" value={selectedFrequency} />
 

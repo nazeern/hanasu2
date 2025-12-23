@@ -9,7 +9,7 @@
 	let step = $state<1 | 2 | 3 | 4>(1);
 	let selectedGoal = $state<string>('');
 	let selectedFrequency = $state<PracticeFrequency | ''>('');
-	let selectedProficiency = $state<string>(proficiencyLevels[0].id);
+	let selectedProficiency = $state<string>('');
 	let skipping = $state(false);
 
 	function next() {
@@ -65,7 +65,7 @@
 		{:else if step === 3}
 			<ProficiencyStep onnext={next} bind:selectedProficiency />
 		{:else}
-			<DemoStep onback={back} {selectedProficiency} {selectedFrequency} />
+			<DemoStep onback={back} {selectedGoal} {selectedProficiency} {selectedFrequency} />
 		{/if}
 	</div>
 </div>

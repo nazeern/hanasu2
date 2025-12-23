@@ -44,6 +44,7 @@ export type Database = {
           google_access_token: string | null
           id: string
           lang: string
+          learning_goal: string | null
           name: string | null
           notify: boolean
           practice_frequency: string
@@ -57,6 +58,7 @@ export type Database = {
           google_access_token?: string | null
           id: string
           lang?: string
+          learning_goal?: string | null
           name?: string | null
           notify?: boolean
           practice_frequency?: string
@@ -70,6 +72,7 @@ export type Database = {
           google_access_token?: string | null
           id?: string
           lang?: string
+          learning_goal?: string | null
           name?: string | null
           notify?: boolean
           practice_frequency?: string

@@ -11,7 +11,7 @@ export interface ProficiencyLevel {
 }
 
 export const goals: GoalOption[] = [
-	{ id: 'daily-life', label: 'Daily Life', description: 'Chat about everyday topics' },
+	{ id: 'daily_life', label: 'Daily Life', description: 'Chat about everyday topics' },
 	{ id: 'travel', label: 'Travel to Japan', description: 'Prepare for your trip' },
 	{ id: 'work', label: 'Work/Business', description: 'Professional Japanese' },
 	{ id: 'culture', label: 'Love Japanese Culture', description: 'Anime, manga, and more' }
