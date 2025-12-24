@@ -19,6 +19,7 @@ export type Database = {
           definitions: Json
           featured: string[]
           id: number
+          jlpt_level: string | null
           readings: string[]
           word: string
         }
@@ -26,6 +27,7 @@ export type Database = {
           definitions: Json
           featured: string[]
           id?: number
+          jlpt_level?: string | null
           readings: string[]
           word: string
         }
@@ -33,6 +35,7 @@ export type Database = {
           definitions?: Json
           featured?: string[]
           id?: number
+          jlpt_level?: string | null
           readings?: string[]
           word?: string
         }

@@ -87,6 +87,36 @@ export const ja_tags: TagInfo[] = [
 		desc: 'A common loanword.',
 		color: 'bg-primary-600',
 	},
+	{
+		code: 'N5',
+		displayName: 'JLPT N5',
+		desc: 'JLPT N5 level word (beginner)',
+		color: 'bg-emerald-500',
+	},
+	{
+		code: 'N4',
+		displayName: 'JLPT N4',
+		desc: 'JLPT N4 level word (elementary)',
+		color: 'bg-green-500',
+	},
+	{
+		code: 'N3',
+		displayName: 'JLPT N3',
+		desc: 'JLPT N3 level word (intermediate)',
+		color: 'bg-blue-500',
+	},
+	{
+		code: 'N2',
+		displayName: 'JLPT N2',
+		desc: 'JLPT N2 level word (pre-advanced)',
+		color: 'bg-purple-500',
+	},
+	{
+		code: 'N1',
+		displayName: 'JLPT N1',
+		desc: 'JLPT N1 level word (advanced)',
+		color: 'bg-red-500',
+	},
 ]
 
 // OpenAI Realtime API Pricing (as of Dec 2025, USD per unit token)

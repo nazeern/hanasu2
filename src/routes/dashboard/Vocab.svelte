@@ -29,6 +29,9 @@
 		<p class="mt-8 mb-4 text-3xl break-all text-center">{nextVocab.word}</p>
 	{/if}
 	<div class="flex items-center gap-1 mb-1 flex-wrap justify-center">
+		{#if nextVocab.jlpt_level}
+			<Tag tag={nextVocab.jlpt_level} />
+		{/if}
 		{#each nextVocab.featured as tag}
 			<Tag {tag} />
 		{/each}

@@ -1,6 +1,7 @@
 import { error, redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 import type { Definition, DictEntry } from '$lib/dictionary.svelte';
+import { sortByJlptLevel } from '$lib/jlpt';
 
 export const load: PageServerLoad = async ({ locals: { safeGetSession, supabase } }) => {
 	const { user } = await safeGetSession();
@@ -56,5 +57,8 @@ export const load: PageServerLoad = async ({ locals: { safeGetSession, supabase 
 		})
 		.filter((item): item is DictEntry => item !== null);
 
-	return { studyQueue, language: profile.lang };
+	// Sort by JLPT level: N5 first, then N4, N3, N2, N1, then words without JLPT tags
+	const sortedQueue = sortByJlptLevel(studyQueue);
+
+	return { studyQueue: sortedQueue, language: profile.lang };
 };

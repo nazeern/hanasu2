@@ -3,6 +3,7 @@ import type { RequestHandler } from './$types';
 import type { ParsedWord } from '../kuromoji-parser';
 import { isString } from '$lib/util';
 import logger from '$lib/logger';
+import { sortByJlptLevel } from '$lib/jlpt';
 
 interface LookupRequestBody {
 	parsedWord: ParsedWord;
@@ -38,7 +39,8 @@ export const POST: RequestHandler = async ({ request, locals: { safeGetSession, 
 
 		if (!user) {
 			const entriesWithVocab = dictEntries?.map((entry) => ({ ...entry, vocabulary: null }));
-			return json({ word: parsedWord.surfaceForm, definitions: entriesWithVocab });
+			const sortedEntries = sortByJlptLevel(entriesWithVocab || []);
+			return json({ word: parsedWord.surfaceForm, definitions: sortedEntries });
 		}
 
 		const wordIds = dictEntries.map((entry) => entry.id);
@@ -55,9 +57,12 @@ export const POST: RequestHandler = async ({ request, locals: { safeGetSession, 
 			vocabulary: vocabMap.get(entry.id) || null
 		}));
 
+		// Sort by JLPT level: N5 first, then N4, N3, N2, N1, then words without JLPT tags
+		const sortedEntries = sortByJlptLevel(entriesWithVocab);
+
 		return json({
 			word: parsedWord.surfaceForm,
-			definitions: entriesWithVocab
+			definitions: sortedEntries
 		});
 	} catch (error) {
 		logger.error('Word lookup error', error);

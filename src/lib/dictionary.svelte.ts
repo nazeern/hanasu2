@@ -17,6 +17,7 @@ export type DictEntry = {
 	featured: string[];
 	readings: string[];
 	definitions: Definition[];
+	jlpt_level: string | null;
 	vocabulary: Tables<'vocabulary'> | null;
 };
 

@@ -29,8 +29,11 @@
 		/>
 	</div>
 
-	{#if entry.featured.length}
+	{#if entry.jlpt_level || entry.featured.length}
 		<div class="flex items-center gap-1 mb-3">
+			{#if entry.jlpt_level}
+				<Tag tag={entry.jlpt_level} />
+			{/if}
 			{#each entry.featured as tag}
 				<Tag {tag} />
 			{/each}
